@@ -1,6 +1,5 @@
 # Release Notes — AVaaS
 
-
 ## Purpose
 The agent receives a user request, **selects the domain agent and tools on its own**, and returns a response.
 This is an agentic system: we test **actions** (routing, tool selection, trajectory), not just text.
