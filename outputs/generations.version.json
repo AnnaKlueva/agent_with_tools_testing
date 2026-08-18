@@ -1,0 +1,13 @@
+{
+  "artifact": "generations",
+  "path": "outputs/generations.json",
+  "version": "1.0.0",
+  "sha256": "571766c1a6c421c11f80156967a5b5f5104fe2185c545cecf080a08419f194ac",
+  "dataset_version": "1.0.0",
+  "dataset_sha256": "c9391bd4a6d2aa05e2bb020074ead11986e3ea091deeec8e5cd82701153cca89",
+  "sut_sha256": "22f0266c7071dd8f088a980b65422f11e5a064d6945142fda9799a6f56143957",
+  "n_runs": 1,
+  "n_records": 32,
+  "n_cases": 32,
+  "generated_at": "2026-08-18T15:09:01+00:00"
+}

@@ -1,0 +1,226 @@
+name: Agent Eval
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "agent_sut.py"
+      - "src/**"
+      - "tests/**"
+      - "scripts/**"
+      - "baselines/**"
+      - "data/**"
+      - "outputs/**"
+      - "requirements.txt"
+      - "run_eval.sh"
+      - "run_eval.ps1"
+      - ".github/workflows/agent-eval.yml"
+  pull_request:
+    paths:
+      - "agent_sut.py"
+      - "src/**"
+      - "tests/**"
+      - "scripts/**"
+      - "baselines/**"
+      - "data/**"
+      - "outputs/**"
+      - "requirements.txt"
+      - "run_eval.sh"
+      - "run_eval.ps1"
+      - ".github/workflows/agent-eval.yml"
+
+permissions:
+  contents: write        # commit updated baseline back to main
+  pull-requests: write   # post the eval comparison comment on PRs
+
+env:
+  JUDGE_MODEL: llama3.2:3b
+  EVAL_TOLERANCE: "0.02"
+  SECURITY_ASR_GATE: "0.0"
+  OLLAMA_MODELS: /home/runner/.ollama/models
+  DEEPEVAL_TELEMETRY_OPT_OUT: "YES"
+
+jobs:
+  eval:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: requirements.txt
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Cache Ollama models
+        uses: actions/cache@v4
+        with:
+          path: ~/.ollama
+          key: ollama-${{ env.JUDGE_MODEL }}
+
+      - name: Install and start Ollama (LLM judge)
+        run: |
+          set -euo pipefail
+          curl -fsSL https://ollama.com/install.sh | sh
+          sudo systemctl stop ollama 2>/dev/null || true
+          nohup ollama serve > /tmp/ollama.log 2>&1 &
+          ready=0
+          for i in $(seq 1 30); do
+            if curl -sf http://localhost:11434/api/tags > /dev/null; then
+              ready=1
+              break
+            fi
+            sleep 2
+          done
+          if [ "$ready" -ne 1 ]; then
+            echo "::error::Ollama server did not start within 60s"
+            tail -50 /tmp/ollama.log || true
+            exit 1
+          fi
+          ollama pull "$JUDGE_MODEL"
+          if ! ollama list | grep -F "$JUDGE_MODEL"; then
+            echo "::error::Model $JUDGE_MODEL not found after pull"
+            ollama list
+            exit 1
+          fi
+
+      - name: Generate agent outputs
+        env:
+          LANGFUSE_PUBLIC_KEY: ${{ secrets.LANGFUSE_PUBLIC_KEY }}
+          LANGFUSE_SECRET_KEY: ${{ secrets.LANGFUSE_SECRET_KEY }}
+          LANGFUSE_BASE_URL: ${{ secrets.LANGFUSE_BASE_URL }}
+        run: python src/generate.py
+
+      - name: Run offline tests (PR)
+        if: github.event_name == 'pull_request'
+        continue-on-error: true
+        id: offline_tests_pr
+        run: |
+          python -m pytest tests/test_functional.py tests/test_eval.py -v \
+            --junitxml=outputs/junit-offline.xml
+
+      - name: Run offline test suite (main only)
+        if: github.event_name == 'push'
+        run: bash run_eval.sh
+
+      - name: Red-team gate (PR — capture for comment)
+        if: github.event_name == 'pull_request'
+        continue-on-error: true
+        id: redteam_pr
+        run: |
+          python -m pytest tests/test_redteam.py -v --junitxml=outputs/junit-redteam.xml
+
+      - name: Build scorecard (PR)
+        if: github.event_name == 'pull_request'
+        continue-on-error: true
+        id: scorecard
+        run: python scripts/build_scorecard.py
+
+      - name: Build scorecard (main)
+        if: github.event_name == 'push'
+        run: python scripts/build_scorecard.py
+
+      - name: Compare against baseline (PR gate)
+        if: github.event_name == 'pull_request'
+        id: compare
+        continue-on-error: true
+        run: python scripts/compare_baseline.py
+
+      - name: Alert on blocked gate
+        if: github.event_name == 'pull_request' && steps.compare.outcome == 'failure'
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+        run: python scripts/send_alert.py --run-id "pr-${{ github.event.number }}"
+
+      - name: Build PR comment
+        if: github.event_name == 'pull_request' && always()
+        run: python scripts/build_pr_comment.py
+
+      - name: Post PR comment
+        if: github.event_name == 'pull_request' && always()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const path = 'outputs/pr_comment.md';
+            if (!fs.existsSync(path)) {
+              core.warning('No PR comment report found, skipping PR comment.');
+              return;
+            }
+            const body = fs.readFileSync(path, 'utf8');
+            const marker = '<!-- agent-eval-report -->';
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+            });
+            const existing = comments.find(c => c.body.includes(marker));
+            if (existing) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: existing.id,
+                body,
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body,
+              });
+            }
+
+      - name: Fail PR if blocking checks failed
+        if: github.event_name == 'pull_request' && always()
+        run: |
+          failed=0
+          if [ "${{ steps.offline_tests_pr.outcome }}" = "failure" ]; then
+            echo "::error::Offline pytest suite failed"
+            failed=1
+          fi
+          if [ "${{ steps.redteam_pr.outcome }}" = "failure" ]; then
+            echo "::error::Red-team pytest suite failed"
+            failed=1
+          fi
+          if [ "${{ steps.compare.outcome }}" = "failure" ]; then
+            echo "::error::Baseline/regression gate failed"
+            failed=1
+          fi
+          exit $failed
+
+      - name: Update baseline (main only)
+        if: github.event_name == 'push'
+        run: python scripts/compare_baseline.py --update-baseline
+
+      - name: Commit baseline back to main
+        if: github.event_name == 'push'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add baselines/baseline.json
+          if ! git diff --cached --quiet; then
+            git commit -m "ci: update eval baseline [skip ci]"
+            git push
+          else
+            echo "Baseline unchanged; nothing to commit."
+          fi
+
+      - name: Upload eval artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: agent-eval-${{ github.event_name }}-${{ github.run_id }}
+          path: |
+            outputs/scorecard.json
+            outputs/comparison.md
+            outputs/comparison.json
+            outputs/pr_comment.md
+            outputs/junit-offline.xml
+            outputs/junit-redteam.xml
+            alerts/
+          if-no-files-found: ignore
