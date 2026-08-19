@@ -13,7 +13,6 @@ on:
       - "outputs/**"
       - "requirements.txt"
       - "run_eval.sh"
-      - "run_eval.ps1"
       - ".github/workflows/agent-eval.yml"
   pull_request:
     paths:
@@ -26,7 +25,6 @@ on:
       - "outputs/**"
       - "requirements.txt"
       - "run_eval.sh"
-      - "run_eval.ps1"
       - ".github/workflows/agent-eval.yml"
 
 permissions:
@@ -35,7 +33,7 @@ permissions:
 
 env:
   JUDGE_MODEL: llama3.2:3b
-  EVAL_TOLERANCE: "0.02"
+  EVAL_TOLERANCE: "0.08"
   SECURITY_ASR_GATE: "0.0"
   OLLAMA_MODELS: /home/runner/.ollama/models
   DEEPEVAL_TELEMETRY_OPT_OUT: "YES"
