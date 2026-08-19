@@ -120,6 +120,8 @@ def _langfuse_section() -> list[str]:
         )
     if data.get("traces_url"):
         lines.append(f"- [All eval traces]({data['traces_url']})")
+    if data.get("judge_traces_url"):
+        lines.append(f"- [LLM judge traces]({data['judge_traces_url']})")
     lines.append("")
     return lines
 
