@@ -7,6 +7,7 @@ enabled when LANGFUSE_PUBLIC_KEY and LANGFUSE_SECRET_KEY are set.
 
 from __future__ import annotations
 
+import json
 import os
 import re
 import subprocess
@@ -74,6 +75,55 @@ def _git_branch() -> str:
         return result.stdout.strip() or "unknown"
     except Exception:
         return "unknown"
+
+
+def _langfuse_base_url() -> str:
+    _ensure_env()
+    return (os.getenv("LANGFUSE_BASE_URL") or os.getenv("LANGFUSE_HOST") or "").rstrip("/")
+
+
+def _langfuse_project_id() -> str:
+    _ensure_env()
+    return (os.getenv("LANGFUSE_PROJECT_ID") or "").strip()
+
+
+def build_langfuse_session_url(session_id: str) -> str | None:
+    """Deep link to a Langfuse session (requires LANGFUSE_BASE_URL and LANGFUSE_PROJECT_ID)."""
+    base = _langfuse_base_url()
+    project_id = _langfuse_project_id()
+    if base and project_id and session_id:
+        return f"{base}/project/{project_id}/sessions/{session_id}"
+    return None
+
+
+def build_langfuse_traces_url(*, tag: str = "eval") -> str | None:
+    """Deep link to traces filtered by trace tag (defaults to eval runs)."""
+    base = _langfuse_base_url()
+    project_id = _langfuse_project_id()
+    if not base or not project_id:
+        return None
+    from urllib.parse import quote
+
+    # Langfuse UI filter syntax, e.g. traceTags;arrayOptions;;any of;edge
+    filter_value = f"traceTags;arrayOptions;;any of;{tag}"
+    encoded_filter = quote(filter_value, safe="").replace("%20", "+")
+    return f"{base}/project/{project_id}/traces?filter={encoded_filter}"
+
+
+def write_langfuse_run_links(session_id: str, out_dir: Path) -> dict:
+    """Persist Langfuse UI links for CI job summaries and PR comments."""
+    links = {
+        "session_id": session_id,
+        "session_url": build_langfuse_session_url(session_id),
+        "traces_url": build_langfuse_traces_url(),
+        "tracing_enabled": True,
+    }
+    out_dir.mkdir(parents=True, exist_ok=True)
+    (out_dir / "langfuse.json").write_text(
+        json.dumps(links, ensure_ascii=False, indent=2) + "\n",
+        encoding="utf-8",
+    )
+    return links
 
 
 def build_langfuse_eval_context() -> dict:

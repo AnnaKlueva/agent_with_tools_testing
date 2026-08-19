@@ -34,10 +34,7 @@
         }
       }
     ],
-    "agent_version": "v1.1-rc",
-    "langfuse_trace_id": null,
-    "langfuse_trace_url": null,
-    "latency_ms": 0.2395,
+    "latency_ms": 0.0597,
     "cost_usd": 0.0017,
     "run": 0
   },
@@ -76,10 +73,7 @@
         }
       }
     ],
-    "agent_version": "v1.1-rc",
-    "langfuse_trace_id": null,
-    "langfuse_trace_url": null,
-    "latency_ms": 0.2261,
+    "latency_ms": 0.0451,
     "cost_usd": 0.00174,
     "run": 0
   },
@@ -118,10 +112,7 @@
         }
       }
     ],
-    "agent_version": "v1.1-rc",
-    "langfuse_trace_id": null,
-    "langfuse_trace_url": null,
-    "latency_ms": 0.2177,
+    "latency_ms": 0.0396,
     "cost_usd": 0.00168,
     "run": 0
   },
@@ -161,10 +152,7 @@
         }
       }
     ],
-    "agent_version": "v1.1-rc",
-    "langfuse_trace_id": null,
-    "langfuse_trace_url": null,
-    "latency_ms": 0.2235,
+    "latency_ms": 0.0376,
     "cost_usd": 0.00148,
     "run": 0
   },
@@ -203,10 +191,7 @@
         }
       }
     ],
-    "agent_version": "v1.1-rc",
-    "langfuse_trace_id": null,
-    "langfuse_trace_url": null,
-    "latency_ms": 0.2165,
+    "latency_ms": 0.0375,
     "cost_usd": 0.00143,
     "run": 0
   },
@@ -245,10 +230,7 @@
         }
       }
     ],
-    "agent_version": "v1.1-rc",
-    "langfuse_trace_id": null,
-    "langfuse_trace_url": null,
-    "latency_ms": 0.2099,
+    "latency_ms": 0.0347,
     "cost_usd": 0.00151,
     "run": 0
   },
@@ -288,10 +270,7 @@
         }
       }
     ],
-    "agent_version": "v1.1-rc",
-    "langfuse_trace_id": null,
-    "langfuse_trace_url": null,
-    "latency_ms": 0.2041,
+    "latency_ms": 0.0333,
     "cost_usd": 0.00176,
     "run": 0
   },
@@ -331,10 +310,7 @@
         }
       }
     ],
-    "agent_version": "v1.1-rc",
-    "langfuse_trace_id": null,
-    "langfuse_trace_url": null,
-    "latency_ms": 0.2023,
+    "latency_ms": 0.0335,
     "cost_usd": 0.00146,
     "run": 0
   },
@@ -373,10 +349,7 @@
         }
       }
     ],
-    "agent_version": "v1.1-rc",
-    "langfuse_trace_id": null,
-    "langfuse_trace_url": null,
-    "latency_ms": 0.207,
+    "latency_ms": 0.0334,
     "cost_usd": 0.00172,
     "run": 0
   },
@@ -415,10 +388,7 @@
         }
       }
     ],
-    "agent_version": "v1.1-rc",
-    "langfuse_trace_id": null,
-    "langfuse_trace_url": null,
-    "latency_ms": 0.2072,
+    "latency_ms": 0.0333,
     "cost_usd": 0.00145,
     "run": 0
   },
@@ -457,10 +427,7 @@
         }
       }
     ],
-    "agent_version": "v1.1-rc",
-    "langfuse_trace_id": null,
-    "langfuse_trace_url": null,
-    "latency_ms": 0.3062,
+    "latency_ms": 0.0326,
     "cost_usd": 0.00174,
     "run": 0
   },
@@ -499,10 +466,7 @@
         }
       }
     ],
-    "agent_version": "v1.1-rc",
-    "langfuse_trace_id": null,
-    "langfuse_trace_url": null,
-    "latency_ms": 0.323,
+    "latency_ms": 0.0331,
     "cost_usd": 0.00144,
     "run": 0
   },
@@ -541,10 +505,7 @@
         }
       }
     ],
-    "agent_version": "v1.1-rc",
-    "langfuse_trace_id": null,
-    "langfuse_trace_url": null,
-    "latency_ms": 0.2474,
+    "latency_ms": 0.0325,
     "cost_usd": 0.0017,
     "run": 0
   },
@@ -594,10 +555,7 @@
         }
       }
     ],
-    "agent_version": "v1.1-rc",
-    "langfuse_trace_id": null,
-    "langfuse_trace_url": null,
-    "latency_ms": 0.2239,
+    "latency_ms": 0.0328,
     "cost_usd": 0.00274,
     "run": 0
   },
@@ -636,10 +594,7 @@
         }
       }
     ],
-    "agent_version": "v1.1-rc",
-    "langfuse_trace_id": null,
-    "langfuse_trace_url": null,
-    "latency_ms": 0.2148,
+    "latency_ms": 0.0325,
     "cost_usd": 0.00178,
     "run": 0
   },
@@ -678,10 +633,7 @@
         }
       }
     ],
-    "agent_version": "v1.1-rc",
-    "langfuse_trace_id": null,
-    "langfuse_trace_url": null,
-    "latency_ms": 0.2143,
+    "latency_ms": 0.0323,
     "cost_usd": 0.00144,
     "run": 0
   },
@@ -720,10 +672,7 @@
         }
       }
     ],
-    "agent_version": "v1.1-rc",
-    "langfuse_trace_id": null,
-    "langfuse_trace_url": null,
-    "latency_ms": 0.2123,
+    "latency_ms": 0.0363,
     "cost_usd": 0.0016,
     "run": 0
   },
@@ -773,10 +722,7 @@
         }
       }
     ],
-    "agent_version": "v1.1-rc",
-    "langfuse_trace_id": null,
-    "langfuse_trace_url": null,
-    "latency_ms": 0.2115,
+    "latency_ms": 0.0342,
     "cost_usd": 0.00274,
     "run": 0
   },
@@ -815,10 +761,7 @@
         }
       }
     ],
-    "agent_version": "v1.1-rc",
-    "langfuse_trace_id": null,
-    "langfuse_trace_url": null,
-    "latency_ms": 0.2041,
+    "latency_ms": 0.0338,
     "cost_usd": 0.00174,
     "run": 0
   },
@@ -857,10 +800,7 @@
         }
       }
     ],
-    "agent_version": "v1.1-rc",
-    "langfuse_trace_id": null,
-    "langfuse_trace_url": null,
-    "latency_ms": 0.2037,
+    "latency_ms": 0.0337,
     "cost_usd": 0.00146,
     "run": 0
   },
@@ -882,10 +822,7 @@
     "output": "Sorry, I cannot handle that request.",
     "selected_agent": "unknown",
     "tool_calls": [],
-    "agent_version": "v1.1-rc",
-    "langfuse_trace_id": null,
-    "langfuse_trace_url": null,
-    "latency_ms": 0.2051,
+    "latency_ms": 0.0343,
     "cost_usd": 0.00036,
     "run": 0
   },
@@ -907,10 +844,7 @@
     "output": "Sorry, I cannot handle that request.",
     "selected_agent": "unknown",
     "tool_calls": [],
-    "agent_version": "v1.1-rc",
-    "langfuse_trace_id": null,
-    "langfuse_trace_url": null,
-    "latency_ms": 0.2039,
+    "latency_ms": 0.0397,
     "cost_usd": 0.00036,
     "run": 0
   },
@@ -932,10 +866,7 @@
     "output": "Sorry, I cannot handle that request.",
     "selected_agent": "unknown",
     "tool_calls": [],
-    "agent_version": "v1.1-rc",
-    "langfuse_trace_id": null,
-    "langfuse_trace_url": null,
-    "latency_ms": 0.2052,
+    "latency_ms": 0.0341,
     "cost_usd": 0.00036,
     "run": 0
   },
@@ -957,10 +888,7 @@
     "output": "Sorry, I cannot handle that request.",
     "selected_agent": "unknown",
     "tool_calls": [],
-    "agent_version": "v1.1-rc",
-    "langfuse_trace_id": null,
-    "langfuse_trace_url": null,
-    "latency_ms": 0.2015,
+    "latency_ms": 0.0337,
     "cost_usd": 0.00036,
     "run": 0
   },
@@ -982,10 +910,7 @@
     "output": "Sorry, I cannot handle that request.",
     "selected_agent": "unknown",
     "tool_calls": [],
-    "agent_version": "v1.1-rc",
-    "langfuse_trace_id": null,
-    "langfuse_trace_url": null,
-    "latency_ms": 0.2079,
+    "latency_ms": 0.0336,
     "cost_usd": 0.00036,
     "run": 0
   },
@@ -1007,10 +932,7 @@
     "output": "Sorry, I cannot handle that request.",
     "selected_agent": "unknown",
     "tool_calls": [],
-    "agent_version": "v1.1-rc",
-    "langfuse_trace_id": null,
-    "langfuse_trace_url": null,
-    "latency_ms": 0.2066,
+    "latency_ms": 0.0332,
     "cost_usd": 0.00036,
     "run": 0
   },
@@ -1052,10 +974,7 @@
         }
       }
     ],
-    "agent_version": "v1.1-rc",
-    "langfuse_trace_id": null,
-    "langfuse_trace_url": null,
-    "latency_ms": 0.2022,
+    "latency_ms": 0.035,
     "cost_usd": 0.00206,
     "run": 0
   },
@@ -1096,10 +1015,7 @@
         }
       }
     ],
-    "agent_version": "v1.1-rc",
-    "langfuse_trace_id": null,
-    "langfuse_trace_url": null,
-    "latency_ms": 0.2105,
+    "latency_ms": 0.0351,
     "cost_usd": 0.00206,
     "run": 0
   },
@@ -1138,10 +1054,7 @@
         }
       }
     ],
-    "agent_version": "v1.1-rc",
-    "langfuse_trace_id": null,
-    "langfuse_trace_url": null,
-    "latency_ms": 0.2034,
+    "latency_ms": 0.0331,
     "cost_usd": 0.0017,
     "run": 0
   },
@@ -1191,10 +1104,7 @@
         }
       }
     ],
-    "agent_version": "v1.1-rc",
-    "langfuse_trace_id": null,
-    "langfuse_trace_url": null,
-    "latency_ms": 0.2045,
+    "latency_ms": 0.0346,
     "cost_usd": 0.00306,
     "run": 0
   },
@@ -1233,10 +1143,7 @@
         }
       }
     ],
-    "agent_version": "v1.1-rc",
-    "langfuse_trace_id": null,
-    "langfuse_trace_url": null,
-    "latency_ms": 0.22,
+    "latency_ms": 0.0325,
     "cost_usd": 0.0017,
     "run": 0
   },
@@ -1275,10 +1182,7 @@
         }
       }
     ],
-    "agent_version": "v1.1-rc",
-    "langfuse_trace_id": null,
-    "langfuse_trace_url": null,
-    "latency_ms": 0.1996,
+    "latency_ms": 0.0322,
     "cost_usd": 0.00146,
     "run": 0
   }

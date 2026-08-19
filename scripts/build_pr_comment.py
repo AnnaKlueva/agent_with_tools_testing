@@ -22,6 +22,7 @@ JUNIT_FILES = (
 )
 COMPARISON = ROOT / "outputs" / "comparison.md"
 SCORECARD = ROOT / "outputs" / "scorecard.json"
+LANGFUSE = ROOT / "outputs" / "langfuse.json"
 OUT = ROOT / "outputs" / "pr_comment.md"
 
 
@@ -97,6 +98,32 @@ def _test_summary_section() -> list[str]:
     return lines
 
 
+def _langfuse_section() -> list[str]:
+    if not LANGFUSE.exists():
+        return []
+    try:
+        data = json.loads(LANGFUSE.read_text(encoding="utf-8"))
+    except json.JSONDecodeError:
+        return ["", "_Langfuse link file is invalid._", ""]
+
+    if not data.get("tracing_enabled"):
+        return []
+
+    lines = ["", "## 🔍 Langfuse", ""]
+    session_id = data.get("session_id") or ""
+    if data.get("session_url"):
+        lines.append(f"- [Session `{session_id}`]({data['session_url']})")
+    elif session_id:
+        lines.append(
+            f"- Session id: `{session_id}` "
+            "_(set `LANGFUSE_PROJECT_ID` secret for a direct link)_"
+        )
+    if data.get("traces_url"):
+        lines.append(f"- [All eval traces]({data['traces_url']})")
+    lines.append("")
+    return lines
+
+
 def _scorecard_note() -> list[str]:
     if not SCORECARD.exists():
         return ["", "_Scorecard not generated (an earlier step may have failed)._", ""]
@@ -116,6 +143,7 @@ def main() -> None:
 
     lines.extend(_test_summary_section())
     lines.extend(_scorecard_note())
+    lines.extend(_langfuse_section())
 
     if COMPARISON.exists():
         comparison = COMPARISON.read_text(encoding="utf-8")
