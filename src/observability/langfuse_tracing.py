@@ -1,5 +1,5 @@
 """
-Langfuse tracing for Track D agent eval runs.
+Langfuse tracing for agent eval runs.
 
 Wraps AgentSUT.handle() without modifying agent_sut.py. Tracing is optional:
 enabled when LANGFUSE_PUBLIC_KEY and LANGFUSE_SECRET_KEY are set.
@@ -203,7 +203,6 @@ def trace_agent_case(case: dict, handle_fn: Callable[[str], dict]) -> dict:
             *(eval_ctx.get("tags") or []),
             case.get("category"),
             case.get("risk_id"),
-            "track-d",
         ]
     )
 

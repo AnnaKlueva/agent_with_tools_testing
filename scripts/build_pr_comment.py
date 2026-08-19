@@ -139,7 +139,7 @@ def _scorecard_note() -> list[str]:
 
 
 def main() -> None:
-    lines = [COMMENT_MARKER, "# 🤖 Track D — Agent Eval (PR)", ""]
+    lines = [COMMENT_MARKER, "# 🤖 Agent Eval (PR)", ""]
 
     lines.extend(_test_summary_section())
     lines.extend(_scorecard_note())

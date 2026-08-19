@@ -1,5 +1,5 @@
 <!-- agent-eval-report -->
-# 🤖 Track D — Agent Eval (PR)
+# 🤖 Agent Eval (PR)
 
 ## 🧪 Test results
 

@@ -1,7 +1,7 @@
 """
 Build a machine-readable scorecard from outputs/generations.json.
 
-Runs the deterministic Track D metrics (same ones asserted in tests/test_eval.py)
+Runs the deterministic agent metrics (same ones asserted in tests/test_eval.py)
 plus the optional Ollama LLM-judge metrics (agent_quality, tool_trajectory,
 final_answer), and writes outputs/scorecard.json:
 

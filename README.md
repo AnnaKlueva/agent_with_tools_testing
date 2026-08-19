@@ -7,7 +7,7 @@ End-to-end evaluation harness for a deterministic agentic system under test (SUT
 
 | Area               | What it includes                                                                                                                |
 | ------------------ | ------------------------------------------------------------------------------------------------------------------------------- |
-| **SUT**            | `agent_sut.py` — rule-based Acme Cloud Orchestrator Agent (intent routing, MCP tool mocks, trace output)                        |
+| **SUT**            | `agent_sut.py` — rule-based Cloud Orchestrator Agent (intent routing, MCP tool mocks, trace output)                        |
 | **Dataset**        | `data/eval_dataset.jsonl` — 32 cases (happy / edge / negative / adversarial) mapped to risks R-01…R-06                          |
 | **Generation**     | `src/generate.py` → `outputs/generations.json` (one run per case by default)                                                    |
 | **Versioning**     | Sidecar manifests (`*.version.json`) pin dataset and generation lineage — see [Artifact versioning](#artifact-versioning)       |
@@ -109,7 +109,7 @@ Each generation run creates:
 
 - One **session** per run (e.g. `eval-20260818T150901Z-4fe334`)
 - One **trace per case** (`agent-eval-{case_id}`) with nested spans: `orchestrator-handle` → `route-intent` → tool calls
-- **Tags:** `eval`, `dataset-{version}`, `branch-{name}`, case `category`, `risk_id`, `track-d`
+- **Tags:** `eval`, `dataset-{version}`, `branch-{name}`, case `category`, `risk_id`
 - **Metadata:** case id, run index, dataset version, git branch
 - **Secret redaction:** `INTERNAL_TOKEN_`* values are masked before export
 
