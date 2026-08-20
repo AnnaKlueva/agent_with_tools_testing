@@ -40,5 +40,4 @@ _Scorecard: 32 cases, LLM judge skipped_
 
 ## 🔍 Langfuse
 
-- [Session `eval-20260820T075942Z-cd78fa18`](https://cloud.langfuse.com/project/cmshkmrzl00c9ad0dtodkjk2p/sessions/eval-20260820T075942Z-cd78fa18)
-- [All eval traces](https://cloud.langfuse.com/project/cmshkmrzl00c9ad0dtodkjk2p/traces?filter=traceTags%3BarrayOptions%3B%3Bany+of%3Beval)
+- [Dataset traces (v1.0.0)](https://cloud.langfuse.com/project/cmshkmrzl00c9ad0dtodkjk2p/traces?filter=traceTags%3BarrayOptions%3B%3Bany+of%3Bdataset-1.0.0)

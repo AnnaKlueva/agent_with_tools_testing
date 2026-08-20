@@ -87,13 +87,15 @@ def _langfuse_project_id() -> str:
     return (os.getenv("LANGFUSE_PROJECT_ID") or "").strip()
 
 
-def build_langfuse_session_url(session_id: str) -> str | None:
-    """Deep link to a Langfuse session (requires LANGFUSE_BASE_URL and LANGFUSE_PROJECT_ID)."""
-    base = _langfuse_base_url()
-    project_id = _langfuse_project_id()
-    if base and project_id and session_id:
-        return f"{base}/project/{project_id}/sessions/{session_id}"
-    return None
+def dataset_trace_tag() -> str:
+    """Langfuse trace tag for the pinned eval dataset version."""
+    try:
+        from versioning import dataset_version_meta
+
+        version = dataset_version_meta().get("version", "unknown")
+    except Exception:
+        version = "unknown"
+    return f"dataset-{version}"
 
 
 def build_langfuse_traces_url(*, tag: str = "eval") -> str | None:
@@ -111,7 +113,6 @@ def build_langfuse_traces_url(*, tag: str = "eval") -> str | None:
 
 
 def write_langfuse_run_links(
-    session_id: str,
     out_dir: Path,
     *,
     include_judge: bool = False,
@@ -126,10 +127,8 @@ def write_langfuse_run_links(
             pass
 
     links = {
-        **existing,
-        "session_id": session_id or existing.get("session_id"),
-        "session_url": build_langfuse_session_url(session_id or existing.get("session_id", "")),
-        "traces_url": build_langfuse_traces_url(tag="eval"),
+        **{k: v for k, v in existing.items() if k != "session_id"},
+        "traces_url": build_langfuse_traces_url(tag=dataset_trace_tag()),
         "tracing_enabled": True,
     }
     if include_judge:
@@ -198,7 +197,6 @@ def trace_agent_case(case: dict, handle_fn: Callable[[str], dict]) -> dict:
     langfuse = get_client()
     case_id = str(case.get("id", "unknown"))
     run = case.get("run", 0)
-    session_id = case.get("_langfuse_session_id")
     eval_ctx = case.get("_langfuse_eval_context") or {}
 
     metadata = {
@@ -226,7 +224,6 @@ def trace_agent_case(case: dict, handle_fn: Callable[[str], dict]) -> dict:
         input={"prompt": prompt},
     ) as root_span:
         with propagate_attributes(
-            session_id=session_id,
             metadata=metadata,
             tags=tags,
             version=eval_ctx.get("dataset_version"),
@@ -298,7 +295,6 @@ def trace_judge_record(
     langfuse = get_client()
     case_id = str(rec.get("id", "unknown"))
     run = rec.get("run", 0)
-    session_id = rec.get("_langfuse_session_id")
     eval_ctx = rec.get("_langfuse_eval_context") or build_langfuse_eval_context()
 
     metadata = {
@@ -338,7 +334,6 @@ def trace_judge_record(
         input=judge_input,
     ) as root_span:
         with propagate_attributes(
-            session_id=session_id,
             metadata=metadata,
             tags=tags,
             version=eval_ctx.get("dataset_version"),

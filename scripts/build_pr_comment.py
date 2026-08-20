@@ -11,10 +11,12 @@ from __future__ import annotations
 
 import json
 import re
+import sys
 import xml.etree.ElementTree as ET
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT / "src"))
 COMMENT_MARKER = "<!-- agent-eval-report -->"
 JUNIT_SUITES = (
     ("test_functional", ROOT / "outputs" / "junit-functional.xml"),
@@ -30,7 +32,14 @@ COMPARISON = ROOT / "outputs" / "comparison.md"
 COMPARISON_JSON = ROOT / "outputs" / "comparison.json"
 SCORECARD = ROOT / "outputs" / "scorecard.json"
 LANGFUSE = ROOT / "outputs" / "langfuse.json"
+DATASET_VERSION = ROOT / "data" / "eval_dataset.version.json"
 OUT = ROOT / "outputs" / "pr_comment.md"
+
+from observability.langfuse_tracing import (  # noqa: E402
+    build_langfuse_traces_url,
+    dataset_trace_tag,
+)
+from versioning import dataset_version_meta  # noqa: E402
 
 
 def _failure_reason(node: ET.Element | None) -> str:
@@ -251,16 +260,10 @@ def _langfuse_section() -> list[str]:
         return []
 
     lines = ["", "## 🔍 Langfuse", ""]
-    session_id = data.get("session_id") or ""
-    if data.get("session_url"):
-        lines.append(f"- [Session `{session_id}`]({data['session_url']})")
-    elif session_id:
-        lines.append(
-            f"- Session id: `{session_id}` "
-            "_(set `LANGFUSE_PROJECT_ID` secret for a direct link)_"
-        )
-    if data.get("traces_url"):
-        lines.append(f"- [All eval traces]({data['traces_url']})")
+    traces_url = build_langfuse_traces_url(tag=dataset_trace_tag()) or data.get("traces_url")
+    if traces_url:
+        version = dataset_version_meta().get("version", "?")
+        lines.append(f"- [Dataset traces (v{version})]({traces_url})")
     if data.get("judge_traces_url"):
         lines.append(f"- [LLM judge traces]({data['judge_traces_url']})")
     lines.append("")

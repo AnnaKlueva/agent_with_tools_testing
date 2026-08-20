@@ -141,14 +141,6 @@ jobs:
           if not data.get("tracing_enabled"):
               lines.append("Tracing was not enabled for this run.")
           else:
-              session_id = data.get("session_id") or ""
-              if data.get("session_url"):
-                  lines.append(f"- [Session `{session_id}`]({data['session_url']})")
-              elif session_id:
-                  lines.append(
-                      f"- Session `{session_id}` "
-                      "(set `LANGFUSE_PROJECT_ID` secret for a direct link)"
-                  )
               if data.get("traces_url"):
                   lines.append(f"- [All eval traces]({data['traces_url']})")
           with Path(os.environ["GITHUB_STEP_SUMMARY"]).open("a", encoding="utf-8") as summary:

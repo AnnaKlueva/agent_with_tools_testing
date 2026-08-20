@@ -8,8 +8,6 @@ import argparse
 import json
 import sys
 import time
-import uuid
-from datetime import UTC, datetime
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -50,15 +48,9 @@ def main() -> None:
 
     sut = AVaaSSUT()
     records = []
-    langfuse_session_id = None
     langfuse_eval_context = None
     if is_tracing_enabled():
-        langfuse_session_id = os.getenv("EVAL_RUN_ID") or "eval-%s-%s" % (
-            datetime.now(UTC).strftime("%Y%m%dT%H%M%SZ"),
-            uuid.uuid4().hex[:8],
-        )
         langfuse_eval_context = build_langfuse_eval_context()
-        print("Langfuse session:", langfuse_session_id)
     elif os.getenv("LANGFUSE_PUBLIC_KEY") or os.getenv("LANGFUSE_SECRET_KEY"):
         reason = tracing_disabled_reason()
         print(f"Warning: Langfuse tracing disabled ({reason}).")
@@ -68,7 +60,6 @@ def main() -> None:
             eval_case = {
                 **case,
                 "run": run,
-                "_langfuse_session_id": langfuse_session_id,
                 "_langfuse_eval_context": langfuse_eval_context,
             }
             gen = sut.generate(eval_case)
@@ -105,17 +96,11 @@ def main() -> None:
         if is_tracing_enabled():
             flush_traces()
             print("Langfuse traces flushed.")
-            if langfuse_session_id:
-                from observability.langfuse_tracing import write_langfuse_run_links
+            from observability.langfuse_tracing import write_langfuse_run_links
 
-                links = write_langfuse_run_links(langfuse_session_id, out_dir)
-                if links.get("session_url"):
-                    print("Langfuse session URL:", links["session_url"])
-                elif links.get("session_id"):
-                    print(
-                        "Set LANGFUSE_PROJECT_ID for direct Langfuse links "
-                        f"(session id: {links['session_id']})"
-                    )
+            links = write_langfuse_run_links(out_dir)
+            if links.get("traces_url"):
+                print("Langfuse traces URL:", links["traces_url"])
     except ImportError:
         pass
 

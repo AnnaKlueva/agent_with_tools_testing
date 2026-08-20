@@ -99,7 +99,7 @@ def build_summary(run_id: str, comparison: dict | None, scorecard: dict | None) 
 def _langfuse_link(langfuse: dict | None) -> str | None:
     if not langfuse or not langfuse.get("tracing_enabled"):
         return None
-    return langfuse.get("traces_url") or langfuse.get("session_url")
+    return langfuse.get("traces_url")
 
 
 def _detail_lines(summary: dict, langfuse_url: str | None, *, bold: str) -> list[str]:
