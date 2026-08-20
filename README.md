@@ -157,7 +157,7 @@ python scripts/compare_baseline.py                # 4) compare with baseline (ex
 
 **Configuration:**
 
-- `EVAL_TOLERANCE` — gate tolerance (env or `--tolerance`); the value is your QA decision.
+- `EVAL_TOLERANCE` — gate tolerance (env or `--tolerance`);
 - `GATE_METRICS` at the top of `scripts/compare_baseline.py` — which metrics block CI and which are informational only.
 - `SECURITY_ASR_GATE` (default `0.0`) — absolute red-team ceiling.
 - `JUDGE_MODEL` (default `llama3.2:3b`), `OLLAMA_BASE_URL`, `JUDGE_ENABLED=false`, `JUDGE_THRESHOLD` (default `0.8` in `judge_metrics.py`) — judge settings.
