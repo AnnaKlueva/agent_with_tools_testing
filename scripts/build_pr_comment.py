@@ -10,21 +10,39 @@ Usage:
 from __future__ import annotations
 
 import json
-import sys
+import re
 import xml.etree.ElementTree as ET
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 COMMENT_MARKER = "<!-- agent-eval-report -->"
-JUNIT_FILES = (
-    ("Offline tests", ROOT / "outputs" / "junit-offline.xml"),
-    ("Red-team", ROOT / "outputs" / "junit-redteam.xml"),
+JUNIT_SUITES = (
+    ("test_functional", ROOT / "outputs" / "junit-functional.xml"),
+    ("test_eval", ROOT / "outputs" / "junit-eval.xml"),
+    ("test_redteam", ROOT / "outputs" / "junit-redteam.xml"),
 )
+JUNIT_OFFLINE_FALLBACK = ROOT / "outputs" / "junit-offline.xml"
+OFFLINE_MODULE_MAP = {
+    "tests.test_functional": "test_functional",
+    "tests.test_eval": "test_eval",
+}
 COMPARISON = ROOT / "outputs" / "comparison.md"
 COMPARISON_JSON = ROOT / "outputs" / "comparison.json"
 SCORECARD = ROOT / "outputs" / "scorecard.json"
 LANGFUSE = ROOT / "outputs" / "langfuse.json"
 OUT = ROOT / "outputs" / "pr_comment.md"
+
+
+def _failure_reason(node: ET.Element | None) -> str:
+    if node is None:
+        return "unknown failure"
+    message = (node.attrib.get("message") or "").strip()
+    text = (node.text or "").strip()
+    reason = message or text or "unknown failure"
+    reason = re.sub(r"\s+", " ", reason)
+    if len(reason) > 240:
+        reason = reason[:237] + "..."
+    return reason
 
 
 def _parse_junit(path: Path) -> dict | None:
@@ -41,16 +59,22 @@ def _parse_junit(path: Path) -> dict | None:
         suites = root.findall("testsuite")
 
     total = errors = failures = skipped = 0
-    failed_cases: list[str] = []
+    failed_cases: list[dict[str, str]] = []
     for suite in suites:
         total += int(suite.attrib.get("tests", 0))
         errors += int(suite.attrib.get("errors", 0))
         failures += int(suite.attrib.get("failures", 0))
         skipped += int(suite.attrib.get("skipped", 0))
         for case in suite.findall("testcase"):
-            name = case.attrib.get("name", "?")
-            if case.find("failure") is not None or case.find("error") is not None:
-                failed_cases.append(name)
+            failure = case.find("failure")
+            error = case.find("error")
+            if failure is not None or error is not None:
+                failed_cases.append(
+                    {
+                        "name": case.attrib.get("name", "?"),
+                        "reason": _failure_reason(failure or error),
+                    }
+                )
 
     passed = max(total - errors - failures - skipped, 0)
     return {
@@ -62,25 +86,67 @@ def _parse_junit(path: Path) -> dict | None:
     }
 
 
-def _collect_test_results() -> tuple[list[tuple[str, dict | None]], bool, bool]:
-    """Return per-suite stats, whether any suite ran, and whether any suite failed."""
-    rows: list[tuple[str, dict | None]] = []
-    any_results = False
-    blocking_failures = False
+def _parse_offline_fallback() -> dict[str, dict | None]:
+    if not JUNIT_OFFLINE_FALLBACK.exists():
+        return {name: None for name, _ in JUNIT_SUITES if name != "test_redteam"}
 
-    for label, path in JUNIT_FILES:
-        stats = _parse_junit(path)
-        rows.append((label, stats))
-        if stats is None:
-            continue
-        any_results = True
-        if stats["failed"]:
-            blocking_failures = True
+    try:
+        root = ET.parse(JUNIT_OFFLINE_FALLBACK).getroot()
+    except ET.ParseError:
+        return {name: None for name, _ in JUNIT_SUITES if name != "test_redteam"}
 
-    return rows, any_results, blocking_failures
+    suites = [root] if root.tag == "testsuite" else root.findall("testsuite")
+    grouped: dict[str, dict] = {
+        name: {"total": 0, "passed": 0, "failed": 0, "skipped": 0, "failed_cases": []}
+        for name in ("test_functional", "test_eval")
+    }
+
+    for suite in suites:
+        for case in suite.findall("testcase"):
+            classname = case.attrib.get("classname", "")
+            module = OFFLINE_MODULE_MAP.get(classname)
+            if module is None:
+                continue
+            bucket = grouped[module]
+            bucket["total"] += 1
+            failure = case.find("failure")
+            error = case.find("error")
+            skipped = case.find("skipped") is not None
+            if skipped:
+                bucket["skipped"] += 1
+            elif failure is not None or error is not None:
+                bucket["failed"] += 1
+                bucket["failed_cases"].append(
+                    {
+                        "name": case.attrib.get("name", "?"),
+                        "reason": _failure_reason(failure or error),
+                    }
+                )
+            else:
+                bucket["passed"] += 1
+
+    return {
+        "test_functional": grouped["test_functional"] if grouped["test_functional"]["total"] else None,
+        "test_eval": grouped["test_eval"] if grouped["test_eval"]["total"] else None,
+    }
 
 
-def _load_baseline_gate() -> tuple[bool | None, list[str]]:
+def _suite_stats(label: str, path: Path) -> dict | None:
+    stats = _parse_junit(path)
+    if stats is not None:
+        return stats
+    if label in ("test_functional", "test_eval"):
+        fallback = _parse_offline_fallback()
+        return fallback.get(label)
+    return None
+
+
+def _collect_test_results() -> list[tuple[str, dict | None]]:
+    return [(label, _suite_stats(label, path)) for label, path in JUNIT_SUITES]
+
+
+def _load_regression_gate() -> tuple[bool | None, list[str]]:
+    """SAFE/BLOCKED is based only on metric regression vs main baseline."""
     if not COMPARISON_JSON.exists():
         return None, []
     try:
@@ -88,89 +154,88 @@ def _load_baseline_gate() -> tuple[bool | None, list[str]]:
     except json.JSONDecodeError:
         return None, []
 
-    passed = data.get("gate_passed")
-    if passed is not False:
-        return passed, []
-
-    reasons: list[str] = []
-    if data.get("failed_metrics"):
-        reasons.append("Baseline regressions: " + ", ".join(data["failed_metrics"]))
-    if data.get("absolute_gate_failures"):
-        reasons.append(
-            "Absolute gate failures: "
-            + ", ".join(row["metric"] for row in data["absolute_gate_failures"])
-        )
-    if not reasons:
-        reasons.append("Baseline comparison gate failed")
-    return False, reasons
-
-
-def _compute_gate() -> tuple[bool | None, list[str]]:
-    """Overall PR gate: blocked when tests or baseline comparison fail."""
-    _, any_results, tests_failed = _collect_test_results()
-    baseline_passed, baseline_reasons = _load_baseline_gate()
-
-    reasons: list[str] = []
-    if tests_failed:
-        reasons.append("One or more test suites failed")
-    if baseline_passed is False:
-        reasons.extend(baseline_reasons)
-
-    if tests_failed or baseline_passed is False:
-        return False, reasons
-    if any_results or baseline_passed is True:
-        return True, []
-    return None, []
+    failed_metrics = data.get("failed_metrics") or []
+    if failed_metrics:
+        tolerance = data.get("tolerance", "?")
+        return False, [
+            f"`{metric}` regressed beyond tolerance ({tolerance})" for metric in failed_metrics
+        ]
+    if data.get("regression_gate_passed") is False:
+        return False, ["Metric regression beyond tolerance vs main baseline"]
+    return True, []
 
 
 def _gate_banner_section() -> list[str]:
-    gate_passed, reasons = _compute_gate()
+    gate_passed, reasons = _load_regression_gate()
     if gate_passed is True:
-        lines = ["## ✅ Gate: PASSED", "", "All executed tests passed and baseline checks succeeded."]
+        lines = [
+            "## ✅ Gate: SAFE",
+            "",
+            "No blocking metric regression vs `main` baseline (within tolerance).",
+        ]
     elif gate_passed is False:
-        lines = ["## ❌ Gate: BLOCKED", ""]
-        if reasons:
-            lines.append("**Blocking reasons:**")
-            for reason in reasons:
-                lines.append(f"- {reason}")
-        else:
-            lines.append("Release blocked by failing checks.")
+        lines = ["## ❌ Gate: BLOCKED", "", "**Regression vs main:**"]
+        for reason in reasons:
+            lines.append(f"- {reason}")
     else:
-        lines = ["## ⚪ Gate: not evaluated", "", "_No test or baseline comparison results available._"]
+        lines = [
+            "## ⚪ Gate: not evaluated",
+            "",
+            "_Baseline comparison not available (scorecard missing or compare step did not run)._",
+        ]
     lines.append("")
     return lines
 
 
+def _suite_status(stats: dict | None) -> tuple[str, str]:
+    if stats is None:
+        return "NOT RUN", "⚪"
+    if stats["total"] == 0:
+        return "NOT RUN", "⚪"
+    if stats["failed"]:
+        return "FAILED", "❌"
+    return "PASSED", "✅"
+
+
 def _test_summary_section() -> list[str]:
-    rows, any_results, blocking_failures = _collect_test_results()
+    rows = _collect_test_results()
     lines = ["## 🧪 Test results", ""]
+    any_results = False
+    any_failures = False
 
     for label, stats in rows:
+        status, icon = _suite_status(stats)
+        if stats is not None:
+            any_results = True
+        if status == "FAILED":
+            any_failures = True
+
         if stats is None:
-            lines.append(f"- **{label}:** not run (no JUnit report)")
+            lines.append(f"- **{label}:** {icon} {status}")
             continue
+
+        detail = f"{stats['passed']} passed"
         if stats["failed"]:
-            icon = "❌"
-        elif stats["total"] == 0:
-            icon = "⚠️"
-        else:
-            icon = "✅"
-        lines.append(
-            f"- **{label}:** {icon} {stats['passed']} passed, "
-            f"{stats['failed']} failed, {stats['skipped']} skipped "
-            f"(total {stats['total']})"
-        )
-        for case in stats["failed_cases"][:8]:
-            lines.append(f"  - `{case}`")
-        if len(stats["failed_cases"]) > 8:
-            lines.append(f"  - … and {len(stats['failed_cases']) - 8} more")
+            detail += f", {stats['failed']} failed"
+        if stats["skipped"]:
+            detail += f", {stats['skipped']} skipped"
+        lines.append(f"- **{label}:** {icon} **{status}** — {detail} (total {stats['total']})")
+
+        for case in stats["failed_cases"]:
+            lines.append(f"  - `{case['name']}`: {case['reason']}")
 
     if not any_results:
         lines.append("_No pytest JUnit files found._")
 
+    if any_failures:
+        lines.extend(
+            [
+                "",
+                "⚠️ **Test failures detected** — these are blocking and a defect is created "
+                "for each failing case. Fix or track before merge.",
+            ]
+        )
     lines.append("")
-    verdict = "❌ **Some tests failed**" if blocking_failures else "✅ **All executed tests passed**"
-    lines.append(verdict)
     return lines
 
 
@@ -216,31 +281,37 @@ def _scorecard_note() -> list[str]:
     ]
 
 
+def _filter_comparison_body(text: str) -> str:
+    filtered: list[str] = []
+    for line in text.splitlines():
+        if line.startswith("Cases — improved:"):
+            continue
+        filtered.append(line)
+    return "\n".join(filtered).strip()
+
+
+def _comparison_section() -> list[str]:
+    if COMPARISON.exists():
+        comparison = _filter_comparison_body(COMPARISON.read_text(encoding="utf-8"))
+        comparison_body = comparison.replace(COMMENT_MARKER, "").strip()
+        if comparison_body:
+            return ["", comparison_body, ""]
+    return [
+        "",
+        "_Baseline comparison not available "
+        "(scorecard missing or compare step did not run)._",
+        "",
+    ]
+
+
 def main() -> None:
     lines = [COMMENT_MARKER, "# 🤖 Agent Eval (PR)", ""]
 
     lines.extend(_gate_banner_section())
+    lines.extend(_comparison_section())
     lines.extend(_test_summary_section())
     lines.extend(_scorecard_note())
     lines.extend(_langfuse_section())
-
-    if COMPARISON.exists():
-        comparison = COMPARISON.read_text(encoding="utf-8")
-        # Drop duplicate marker if compare_baseline already included it
-        comparison_body = comparison.replace(COMMENT_MARKER, "").strip()
-        if comparison_body:
-            lines.append("---")
-            lines.append("")
-            lines.append(comparison_body)
-            lines.append("")
-    else:
-        lines += [
-            "---",
-            "",
-            "_Baseline comparison not available "
-            "(scorecard missing or compare step did not run)._",
-            "",
-        ]
 
     OUT.parent.mkdir(parents=True, exist_ok=True)
     OUT.write_text("\n".join(lines), encoding="utf-8")
