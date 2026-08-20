@@ -21,6 +21,7 @@ JUNIT_FILES = (
     ("Red-team", ROOT / "outputs" / "junit-redteam.xml"),
 )
 COMPARISON = ROOT / "outputs" / "comparison.md"
+COMPARISON_JSON = ROOT / "outputs" / "comparison.json"
 SCORECARD = ROOT / "outputs" / "scorecard.json"
 LANGFUSE = ROOT / "outputs" / "langfuse.json"
 OUT = ROOT / "outputs" / "pr_comment.md"
@@ -61,19 +62,94 @@ def _parse_junit(path: Path) -> dict | None:
     }
 
 
-def _test_summary_section() -> list[str]:
-    lines = ["## 🧪 Test results", ""]
+def _collect_test_results() -> tuple[list[tuple[str, dict | None]], bool, bool]:
+    """Return per-suite stats, whether any suite ran, and whether any suite failed."""
+    rows: list[tuple[str, dict | None]] = []
     any_results = False
     blocking_failures = False
 
     for label, path in JUNIT_FILES:
         stats = _parse_junit(path)
+        rows.append((label, stats))
         if stats is None:
-            lines.append(f"- **{label}:** not run (no JUnit report)")
             continue
         any_results = True
         if stats["failed"]:
             blocking_failures = True
+
+    return rows, any_results, blocking_failures
+
+
+def _load_baseline_gate() -> tuple[bool | None, list[str]]:
+    if not COMPARISON_JSON.exists():
+        return None, []
+    try:
+        data = json.loads(COMPARISON_JSON.read_text(encoding="utf-8"))
+    except json.JSONDecodeError:
+        return None, []
+
+    passed = data.get("gate_passed")
+    if passed is not False:
+        return passed, []
+
+    reasons: list[str] = []
+    if data.get("failed_metrics"):
+        reasons.append("Baseline regressions: " + ", ".join(data["failed_metrics"]))
+    if data.get("absolute_gate_failures"):
+        reasons.append(
+            "Absolute gate failures: "
+            + ", ".join(row["metric"] for row in data["absolute_gate_failures"])
+        )
+    if not reasons:
+        reasons.append("Baseline comparison gate failed")
+    return False, reasons
+
+
+def _compute_gate() -> tuple[bool | None, list[str]]:
+    """Overall PR gate: blocked when tests or baseline comparison fail."""
+    _, any_results, tests_failed = _collect_test_results()
+    baseline_passed, baseline_reasons = _load_baseline_gate()
+
+    reasons: list[str] = []
+    if tests_failed:
+        reasons.append("One or more test suites failed")
+    if baseline_passed is False:
+        reasons.extend(baseline_reasons)
+
+    if tests_failed or baseline_passed is False:
+        return False, reasons
+    if any_results or baseline_passed is True:
+        return True, []
+    return None, []
+
+
+def _gate_banner_section() -> list[str]:
+    gate_passed, reasons = _compute_gate()
+    if gate_passed is True:
+        lines = ["## ✅ Gate: PASSED", "", "All executed tests passed and baseline checks succeeded."]
+    elif gate_passed is False:
+        lines = ["## ❌ Gate: BLOCKED", ""]
+        if reasons:
+            lines.append("**Blocking reasons:**")
+            for reason in reasons:
+                lines.append(f"- {reason}")
+        else:
+            lines.append("Release blocked by failing checks.")
+    else:
+        lines = ["## ⚪ Gate: not evaluated", "", "_No test or baseline comparison results available._"]
+    lines.append("")
+    return lines
+
+
+def _test_summary_section() -> list[str]:
+    rows, any_results, blocking_failures = _collect_test_results()
+    lines = ["## 🧪 Test results", ""]
+
+    for label, stats in rows:
+        if stats is None:
+            lines.append(f"- **{label}:** not run (no JUnit report)")
+            continue
+        if stats["failed"]:
             icon = "❌"
         elif stats["total"] == 0:
             icon = "⚠️"
@@ -143,6 +219,7 @@ def _scorecard_note() -> list[str]:
 def main() -> None:
     lines = [COMMENT_MARKER, "# 🤖 Agent Eval (PR)", ""]
 
+    lines.extend(_gate_banner_section())
     lines.extend(_test_summary_section())
     lines.extend(_scorecard_note())
     lines.extend(_langfuse_section())

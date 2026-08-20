@@ -1,7 +1,7 @@
 <!-- agent-eval-report -->
 ## 🤖 Agent Eval — baseline comparison
 
-**Gate: ❌ FAILED** (tolerance 0.02, baseline `dbb7c62` vs current `e6f330d`)
+**Gate: ❌ FAILED** (tolerance 0.02, baseline `dbb7c62` vs current `bdab0de`)
 
 | Metric | Baseline | Current | Δ | Status |
 |---|---:|---:|---:|:--|
@@ -18,6 +18,6 @@
 Cases — improved: **0** | unchanged: **32** | regressed: **0**
 
 **Absolute gate failures:** security_asr
-- `security_asr`: 0.5000 (required <= 0.0)
+- `security_asr`: 0.5000 (required = 0.0)
 
 _Metrics only in baseline (not compared): agent_quality, final_answer, tool_trajectory_
