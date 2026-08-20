@@ -11,7 +11,7 @@ End-to-end evaluation harness for a deterministic agentic system under test (SUT
 | **Dataset**        | `data/eval_dataset.jsonl` — 32 cases (happy / edge / negative / adversarial) mapped to risks R-01…R-06                          |
 | **Generation**     | `src/generate.py` → `outputs/generations.json` (one run per case by default)                                                    |
 | **Versioning**     | Sidecar manifests (`*.version.json`) pin dataset and generation lineage — see [Artifact versioning](#artifact-versioning)       |
-| **Tests**          | `tests/test_functional.py`, `tests/test_eval.py`, `tests/test_redteam.py` — offline over saved generations                      |
+| **Tests**          | `tests/test_functional.py`, `tests/test_eval.py`, `tests/test_judge.py`, `tests/test_redteam.py` — offline over saved generations |
 | **Metrics**        | Deterministic DeepEval proxies + optional LLM-judge (Ollama) + red-team ASR — see [How testing was done](#how-testing-was-done) |
 | **Scorecard**      | `scripts/build_scorecard.py` → `outputs/scorecard.json`                                                                         |
 | **Baseline gate**  | `baselines/baseline.json` + `scripts/compare_baseline.py` — delta-based CI regression                                           |
@@ -56,17 +56,18 @@ The SUT is deterministic (no LLM). Each case from `eval_dataset.jsonl` is execut
 
 ```bash
 bash run_eval.sh
-# or: pytest tests/test_functional.py tests/test_eval.py tests/test_redteam.py -v
+# or: pytest tests/test_functional.py tests/test_eval.py tests/test_judge.py tests/test_redteam.py -v
 ```
 
-Three pytest layers, all reading `outputs/generations.json`:
+Four pytest layers, all reading `outputs/generations.json`:
 
 
-| Suite          | File                       | What it checks                                                                                                                                                               |
-| -------------- | -------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Functional** | `tests/test_functional.py` | Schema, routing oracles, tool catalog, golden `expected_`* fields, version sidecars                                                                                          |
-| **Metrics**    | `tests/test_eval.py`       | Offline DeepEval proxies (tool/argument correctness, step efficiency, task completion, relevancy, safety, latency, cost); optional LLM-judge sample when Ollama is available |
-| **Red-team**   | `tests/test_redteam.py`    | Adversarial oracles, token-leak detection, duplicate tool-call checks, **ASR gate** (`security_asr ≤ 0.0`)                                                                   |
+| Suite              | File                       | What it checks                                                                                                                                                               |
+| ------------------ | -------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Functional**     | `tests/test_functional.py` | Schema, routing oracles, tool catalog, golden `expected_`* fields, version sidecars                                                                                          |
+| **Metrics**        | `tests/test_eval.py`       | Offline DeepEval proxies (tool/argument correctness, step efficiency, task completion, relevancy, safety, latency, cost)                                                       |
+| **LLM as judge**   | `tests/test_judge.py`      | Optional DeepEval GEval + Ollama on a 3-case sample (`agent_quality`, `tool_trajectory`, `final_answer`); **fails when score is below `JUDGE_THRESHOLD`** (default 0.8); skipped when Ollama is unavailable |
+| **Red-team**       | `tests/test_redteam.py`    | Adversarial oracles, token-leak detection, duplicate tool-call checks, **ASR gate** (`security_asr ≤ 0.0`)                                                                   |
 
 
 
@@ -79,7 +80,7 @@ python scripts/compare_baseline.py                # compare with baselines/basel
 python scripts/compare_baseline.py --update-baseline   # refresh baseline on main
 ```
 
-**Scorecard metrics:** 8 deterministic (tool/argument correctness, step efficiency, task completion, answer relevancy, safety, latency, cost) + 3 LLM-judge via DeepEval GEval on local Ollama (`agent_quality`, `tool_trajectory`, `final_answer`; pass threshold **≥ 0.8**, `JUDGE_THRESHOLD` in `judge_metrics.py`).
+**Scorecard metrics:** 8 deterministic (tool/argument correctness, step efficiency, task completion, answer relevancy, safety, latency, cost) + 3 LLM-judge via DeepEval GEval on local Ollama (`agent_quality`, `tool_trajectory`, `final_answer`; pass threshold **≥ 0.8**, `JUDGE_THRESHOLD` env var / default in `judge_metrics.py`). Scorecard judge metrics are informational; **blocking judge checks** run in `tests/test_judge.py` when Ollama is available.
 
 Full strategy, risk matrix, and pass/fail criteria: `[test_strategy.md](test_strategy.md)`.  
 Latest run summary and defect cards: `[reports/results.md](reports/results.md)`.
@@ -150,7 +151,7 @@ Every push to `main` creates a **baseline**, and every PR is compared against it
 **Pipeline** (`.github/workflows/agent-eval.yml` at the repository root):
 
 - **push to** `main`: generation → pytest suite (`run_eval.sh`) → scorecard → `baselines/baseline.json` is committed back to `main` (`[skip ci]`).
-- **pull_request**: generation → scorecard → comparison with baseline → PR comment with a delta table → **CI fails** if any blocking metric drops by more than `EVAL_TOLERANCE` (default `0.02`), offline tests fail, or red-team ASR gate fails.
+- **pull_request**: generation → pytest suites (functional, eval, **LLM-as-judge**, red-team) → scorecard → comparison with baseline → PR comment with a delta table and **separate test-result lines per suite** (including **test_judge (LLM as judge)**) → **CI fails** if any blocking metric drops by more than `EVAL_TOLERANCE` (default `0.02`), offline tests fail, LLM-judge tests fail (score below `JUDGE_THRESHOLD`), or red-team ASR gate fails.
 
 **Alerting:** when the PR gate is blocked, the workflow runs `scripts/send_alert.py --run-id "pr-<n>"`. It posts a summary (blocking regressions, absolute-gate failures such as `security_asr`, and a Langfuse link when available) to Slack via the `SLACK_WEBHOOK_URL` secret; without the secret it records a `dry-run` alert instead. In both cases, when running in GitHub Actions the same alert is written to the **CI job summary** (`$GITHUB_STEP_SUMMARY`), so it is visible in the Actions run with no external service or secret. It also writes `alerts/alert-pr-<n>.json` (+ `.md`), uploaded as a CI artifact. Alerting is best-effort (`continue-on-error`) and never masks the underlying gate failure.
 
@@ -168,8 +169,8 @@ python scripts/compare_baseline.py                # 4) compare with baseline (ex
 - `EVAL_TOLERANCE` — gate tolerance (env or `--tolerance`);
 - `GATE_METRICS` at the top of `scripts/compare_baseline.py` — which metrics block CI and which are informational only.
 - `SECURITY_ASR_GATE` (default `0.0`) — absolute red-team ceiling.
-- `JUDGE_MODEL` (default `llama3.2:3b`), `OLLAMA_BASE_URL`, `JUDGE_ENABLED=false`, `JUDGE_THRESHOLD` (default `0.8` in `judge_metrics.py`) — judge settings.
+- `JUDGE_MODEL` (default `llama3.2:3b`), `OLLAMA_BASE_URL`, `JUDGE_ENABLED=false`, `JUDGE_THRESHOLD` (default `0.8`, overridable via env) — judge settings.
 
-The judge is enabled automatically when an Ollama server is available (in CI it is installed on the runner, and the model is cached between runs); without Ollama, only deterministic metrics are computed.
+The judge is enabled automatically when an Ollama server is available (in CI it is installed on the runner, and the model is cached between runs). Without Ollama, `tests/test_judge.py` is skipped and only deterministic metrics are computed in the scorecard.
 
 **GitHub secrets (optional):** `LANGFUSE_PUBLIC_KEY`, `LANGFUSE_SECRET_KEY`, `LANGFUSE_BASE_URL` — for Langfuse tracing only; the pipeline works without them.

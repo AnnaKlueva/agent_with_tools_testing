@@ -158,6 +158,8 @@ jobs:
           if [ $? -ne 0 ]; then failed=1; fi
           python -m pytest tests/test_eval.py -v --junitxml=outputs/junit-eval.xml
           if [ $? -ne 0 ]; then failed=1; fi
+          python -m pytest tests/test_judge.py -v --junitxml=outputs/junit-judge.xml
+          if [ $? -ne 0 ]; then failed=1; fi
           exit $failed
 
       - name: Run offline test suite (main only)
@@ -284,6 +286,7 @@ jobs:
             outputs/pr_comment.md
             outputs/junit-functional.xml
             outputs/junit-eval.xml
+            outputs/junit-judge.xml
             outputs/junit-redteam.xml
             alerts/
           if-no-files-found: ignore

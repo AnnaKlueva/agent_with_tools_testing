@@ -31,6 +31,7 @@ _Metrics only in baseline (not compared): agent_quality, final_answer, tool_traj
 
 - **test_functional:** ⚪ NOT RUN
 - **test_eval:** ⚪ NOT RUN
+- **test_judge:** ⚪ NOT RUN
 - **test_redteam:** ⚪ NOT RUN
 _No pytest JUnit files found._
 
@@ -40,4 +41,4 @@ _Scorecard: 32 cases, LLM judge skipped_
 
 ## 🔍 Langfuse
 
-- [Dataset traces (v1.0.0)](https://cloud.langfuse.com/project/cmshkmrzl00c9ad0dtodkjk2p/traces?filter=traceTags%3BarrayOptions%3B%3Bany+of%3Bdataset-1.0.0)
+- [Dataset traces (v1.0.0)](https://cloud.langfuse.com/project/cmshkmrzl00c9ad0dtodkjk2p/traces?filter=traceTags%3BarrayOptions%3B%3Bany+of%3Beval)

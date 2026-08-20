@@ -1,7 +1,5 @@
 """
 Metric evaluation OVER saved generations (offline, deterministic, no API keys).
-
-Hybrid: offline DeepEval metrics always run; optional LLM-judge sample when Ollama is up.
 """
 
 from __future__ import annotations
@@ -28,14 +26,6 @@ from metrics.agent_metrics import (  # noqa: E402
     offline_tool_correctness_metric,
     records_for_metric,
 )
-from metrics.judge_metrics import (  # noqa: E402
-    JUDGE_METRIC_NAMES,
-    build_judge_metrics,
-    judge_available,
-    judge_model_name,
-    judge_record,
-)
-
 GENERATIONS = ROOT / "outputs" / "generations.json"
 
 PASS_RATE_THRESHOLD = 0.8
@@ -144,24 +134,3 @@ def test_offline_cost():
         lambda rec: measure_offline_metric(rec, metric),
         "Cost",
     )
-
-
-@pytest.mark.skipif(
-    not judge_available(),
-    reason=f"Ollama judge unavailable (need server + `{judge_model_name()}` pulled)",
-)
-def test_llm_judge_metrics_sample():
-    """Optional LLM-judge (DeepEval GEval + Ollama) on 3 cases to limit runtime."""
-    records = load_generations()[:3]
-    metrics = build_judge_metrics()
-    assert metrics, "Expected Ollama judge metrics when judge_available()"
-
-    for rec in records:
-        results = judge_record(metrics, rec)
-        assert set(results) == set(JUDGE_METRIC_NAMES)
-        for name, result in results.items():
-            assert isinstance(result["score"], float)
-            assert "reason" in result
-            assert not result["reason"].startswith("judge error:"), (
-                f"{rec['id']} / {name}: {result['reason']}"
-            )

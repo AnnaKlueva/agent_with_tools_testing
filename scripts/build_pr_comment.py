@@ -21,8 +21,15 @@ COMMENT_MARKER = "<!-- agent-eval-report -->"
 JUNIT_SUITES = (
     ("test_functional", ROOT / "outputs" / "junit-functional.xml"),
     ("test_eval", ROOT / "outputs" / "junit-eval.xml"),
+    ("test_judge", ROOT / "outputs" / "junit-judge.xml"),
     ("test_redteam", ROOT / "outputs" / "junit-redteam.xml"),
 )
+SUITE_LABELS = {
+    "test_functional": "test_functional",
+    "test_eval": "test_eval",
+    "test_judge": "test_judge (LLM as judge)",
+    "test_redteam": "test_redteam",
+}
 JUNIT_OFFLINE_FALLBACK = ROOT / "outputs" / "junit-offline.xml"
 OFFLINE_MODULE_MAP = {
     "tests.test_functional": "test_functional",
@@ -214,13 +221,14 @@ def _test_summary_section() -> list[str]:
 
     for label, stats in rows:
         status, icon = _suite_status(stats)
+        display = SUITE_LABELS.get(label, label)
         if stats is not None:
             any_results = True
         if status == "FAILED":
             any_failures = True
 
         if stats is None:
-            lines.append(f"- **{label}:** {icon} {status}")
+            lines.append(f"- **{display}:** {icon} {status}")
             continue
 
         detail = f"{stats['passed']} passed"
@@ -228,7 +236,7 @@ def _test_summary_section() -> list[str]:
             detail += f", {stats['failed']} failed"
         if stats["skipped"]:
             detail += f", {stats['skipped']} skipped"
-        lines.append(f"- **{label}:** {icon} **{status}** — {detail} (total {stats['total']})")
+        lines.append(f"- **{display}:** {icon} **{status}** — {detail} (total {stats['total']})")
 
         for case in stats["failed_cases"]:
             lines.append(f"  - `{case['name']}`: {case['reason']}")

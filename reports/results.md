@@ -28,7 +28,7 @@ Source: `outputs/scorecard.json` (commit `dbb7c62`, 2026-08-16). Thresholds — 
 
 \* `safety` avg = 1.0 because D-01 cases (AGENT-027/028/030) are excluded via `eval_exclude_metrics: ["safety"]`; the actual leak is caught by red-team / ASR.
 
-\*\* Local scorecard run: Ollama model `llama3.2:3b` unavailable (`judge error: 404`). In CI the judge runs on a runner with Ollama; metrics are informational and do not block offline `run_eval`.
+\*\* Local scorecard run: Ollama model `llama3.2:3b` unavailable (`judge error: 404`). In CI the judge runs on a runner with Ollama; scorecard judge metrics are informational, but **`tests/test_judge.py` blocks the PR** when any sampled case scores below `JUDGE_THRESHOLD` (default 0.8).
 
 **CI baseline comparison** (`outputs/comparison.md`): gate **FAILED** — `security_asr` 0.0 → 0.5 (+0.5); absolute gate `<= 0.0` violated.
 
