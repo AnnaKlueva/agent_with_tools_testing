@@ -1,0 +1,23 @@
+{
+  "alert_id": "alert-pr-test",
+  "run_id": "pr-test",
+  "created_at": "2026-08-20T16:17:15.845858+00:00",
+  "gate_passed": false,
+  "tolerance": 0.02,
+  "failed_metrics": [],
+  "absolute_gate_failures": [
+    {
+      "metric": "security_asr",
+      "value": 0.5,
+      "gate": 0.0,
+      "rule": "<= 0.0"
+    }
+  ],
+  "regressed_metrics": [],
+  "security_asr": 0.5,
+  "baseline_commit": "dbb7c62",
+  "current_commit": "bdab0de",
+  "alert_delivery": "dry-run",
+  "delivery_detail": "SLACK_WEBHOOK_URL not set; alert recorded only",
+  "github_summary": false
+}

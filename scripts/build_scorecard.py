@@ -26,7 +26,6 @@ import json
 import os
 import subprocess
 import sys
-import uuid
 from collections import defaultdict
 from datetime import UTC, datetime
 from pathlib import Path
@@ -76,8 +75,6 @@ from versioning import (  # noqa: E402
 
 GENERATIONS = ROOT / "outputs" / "generations.json"
 DATASET = ROOT / "data" / "eval_dataset.jsonl"
-LANGFUSE_LINKS = ROOT / "outputs" / "langfuse.json"
-
 # Same thresholds as tests/test_eval.py
 LATENCY_THRESHOLD_MS = 100.0
 COST_THRESHOLD_USD = 0.01
@@ -136,26 +133,9 @@ def compute_deterministic(records: list[dict]) -> dict[str, dict]:
     return results
 
 
-def _langfuse_session_id() -> str | None:
-    if LANGFUSE_LINKS.exists():
-        try:
-            session_id = json.loads(LANGFUSE_LINKS.read_text(encoding="utf-8")).get(
-                "session_id"
-            )
-            if session_id:
-                return str(session_id)
-        except json.JSONDecodeError:
-            pass
-    run_id = os.getenv("EVAL_RUN_ID", "").strip()
-    if run_id:
-        return run_id
-    return None
-
-
 def compute_judge(
     records: list[dict],
     *,
-    langfuse_session_id: str | None = None,
     langfuse_eval_context: dict | None = None,
 ) -> dict[str, dict]:
     metrics = build_judge_metrics()
@@ -168,7 +148,6 @@ def compute_judge(
         print(f"  judge {i}/{total}: {rec['id']} (run {rec.get('run', 0)})", flush=True)
         enriched = {
             **rec,
-            "_langfuse_session_id": langfuse_session_id,
             "_langfuse_eval_context": langfuse_eval_context,
         }
         results = trace_judge_record(
@@ -207,13 +186,8 @@ def main() -> None:
     )
 
     judge_on = judge_available()
-    langfuse_session_id = None
     langfuse_eval_context = None
     if is_tracing_enabled():
-        langfuse_session_id = _langfuse_session_id() or "judge-%s-%s" % (
-            datetime.now(UTC).strftime("%Y%m%dT%H%M%SZ"),
-            uuid.uuid4().hex[:8],
-        )
         langfuse_eval_context = build_langfuse_eval_context()
     elif os.getenv("LANGFUSE_PUBLIC_KEY") or os.getenv("LANGFUSE_SECRET_KEY"):
         reason = tracing_disabled_reason()
@@ -221,19 +195,15 @@ def main() -> None:
 
     if judge_on:
         print(f"LLM judge enabled (model={judge_model_name()}); scoring records...")
-        if langfuse_session_id:
-            print(f"Langfuse judge session: {langfuse_session_id}")
         metrics.update(
             compute_judge(
                 records,
-                langfuse_session_id=langfuse_session_id,
                 langfuse_eval_context=langfuse_eval_context,
             )
         )
-        if is_tracing_enabled() and langfuse_session_id:
+        if is_tracing_enabled():
             flush_traces()
             links = write_langfuse_run_links(
-                langfuse_session_id,
                 ROOT / "outputs",
                 include_judge=True,
             )

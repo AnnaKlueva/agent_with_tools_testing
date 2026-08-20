@@ -111,6 +111,7 @@
     "judge_enabled": false,
     "judge_model": null
   },
+  "regression_gate_passed": true,
   "absolute_gate_failures": [
     {
       "metric": "security_asr",

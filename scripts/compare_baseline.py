@@ -204,7 +204,8 @@ def render_markdown(result: dict) -> str:
     icon = {"improved": "🟢", "unchanged": "⚪", "regressed": "🔴"}
     base_commit = (result["baseline_meta"].get("commit") or "")[:7] or "n/a"
     cur_commit = (result["current_meta"].get("commit") or "")[:7] or "n/a"
-    verdict = "✅ PASSED" if result["gate_passed"] else "❌ FAILED"
+    regression_blocked = bool(result["failed_metrics"])
+    verdict = "✅ SAFE" if not regression_blocked else "❌ BLOCKED"
 
     lines = [
         COMMENT_MARKER,
@@ -222,13 +223,6 @@ def render_markdown(result: dict) -> str:
             f"| {row['metric']} | {row['baseline']:.4f} | {row['current']:.4f} "
             f"| {row['delta']:+.4f} | {icon[row['status']]} {row['status']}{note} |"
         )
-
-    cases = result["cases"]
-    lines += [
-        "",
-        f"Cases — improved: **{cases['improved']}** | unchanged: **{cases['unchanged']}** "
-        f"| regressed: **{cases['regressed']}**",
-    ]
 
     if result["failed_metrics"]:
         lines += ["", "**Blocking regressions:** " + ", ".join(result["failed_metrics"])]
@@ -311,6 +305,7 @@ def main() -> None:
     baseline_data = load_json(baseline_path)
     current = load_json(scorecard_path)
     result = compare(baseline_data, current, args.tolerance)
+    result["regression_gate_passed"] = not result["failed_metrics"]
     absolute_failures = check_absolute_gates(current)
     if absolute_failures:
         result["absolute_gate_failures"] = absolute_failures

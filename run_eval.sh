@@ -21,6 +21,9 @@ echo "==> Functional tests (schema + generation contract)"
 echo "==> Metric evaluation (offline, deterministic)"
 "$PY" -m pytest tests/test_eval.py -v
 
+echo "==> LLM-as-judge metrics (optional, requires Ollama)"
+"$PY" -m pytest tests/test_judge.py -v
+
 echo "==> Red-team (ASR + adversarial oracles)"
 "$PY" -m pytest tests/test_redteam.py -v
 

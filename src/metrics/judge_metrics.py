@@ -29,7 +29,7 @@ from typing import Any
 
 DEFAULT_JUDGE_MODEL = "llama3.2:3b"
 DEFAULT_OLLAMA_BASE_URL = "http://localhost:11434"
-JUDGE_THRESHOLD = 0.8
+JUDGE_THRESHOLD = float(os.getenv("JUDGE_THRESHOLD", "0.8"))
 
 JUDGE_METRIC_NAMES = ("agent_quality", "tool_trajectory", "final_answer")
 

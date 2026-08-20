@@ -44,6 +44,8 @@ jobs:
     timeout-minutes: 90
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - uses: actions/setup-python@v5
         with:
@@ -86,7 +88,32 @@ jobs:
             exit 1
           fi
 
+      - name: Detect generation inputs changed
+        id: gen_inputs
+        run: |
+          set -euo pipefail
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            base="${{ github.event.pull_request.base.sha }}"
+          elif [ -n "${{ github.event.before }}" ] && [ "${{ github.event.before }}" != "0000000000000000000000000000000000000000" ]; then
+            base="${{ github.event.before }}"
+          else
+            base="HEAD~1"
+          fi
+          if ! git rev-parse --verify "$base" >/dev/null 2>&1; then
+            echo "run_generation=true" >> "$GITHUB_OUTPUT"
+            echo "No prior revision to compare — running generation."
+            exit 0
+          fi
+          if git diff --name-only "$base" HEAD -- agent_sut.py data/eval_dataset.jsonl data/eval_dataset.version.json | grep -q .; then
+            echo "run_generation=true" >> "$GITHUB_OUTPUT"
+            echo "SUT (agent_sut.py) or eval dataset changed — running generation."
+          else
+            echo "run_generation=false" >> "$GITHUB_OUTPUT"
+            echo "SUT (agent_sut.py) and eval dataset unchanged — skipping generation (using committed outputs/generations.json)."
+          fi
+
       - name: Generate agent outputs
+        if: steps.gen_inputs.outputs.run_generation == 'true'
         env:
           EVAL_RUN_ID: ci-${{ github.event_name }}-${{ github.run_id }}
           LANGFUSE_PUBLIC_KEY: ${{ secrets.LANGFUSE_PUBLIC_KEY }}
@@ -114,14 +141,6 @@ jobs:
           if not data.get("tracing_enabled"):
               lines.append("Tracing was not enabled for this run.")
           else:
-              session_id = data.get("session_id") or ""
-              if data.get("session_url"):
-                  lines.append(f"- [Session `{session_id}`]({data['session_url']})")
-              elif session_id:
-                  lines.append(
-                      f"- Session `{session_id}` "
-                      "(set `LANGFUSE_PROJECT_ID` secret for a direct link)"
-                  )
               if data.get("traces_url"):
                   lines.append(f"- [All eval traces]({data['traces_url']})")
           with Path(os.environ["GITHUB_STEP_SUMMARY"]).open("a", encoding="utf-8") as summary:
@@ -133,8 +152,15 @@ jobs:
         continue-on-error: true
         id: offline_tests_pr
         run: |
-          python -m pytest tests/test_functional.py tests/test_eval.py -v \
-            --junitxml=outputs/junit-offline.xml
+          set +e
+          failed=0
+          python -m pytest tests/test_functional.py -v --junitxml=outputs/junit-functional.xml
+          if [ $? -ne 0 ]; then failed=1; fi
+          python -m pytest tests/test_eval.py -v --junitxml=outputs/junit-eval.xml
+          if [ $? -ne 0 ]; then failed=1; fi
+          python -m pytest tests/test_judge.py -v --junitxml=outputs/junit-judge.xml
+          if [ $? -ne 0 ]; then failed=1; fi
+          exit $failed
 
       - name: Run offline test suite (main only)
         if: github.event_name == 'push'
@@ -258,7 +284,9 @@ jobs:
             outputs/comparison.md
             outputs/comparison.json
             outputs/pr_comment.md
-            outputs/junit-offline.xml
+            outputs/junit-functional.xml
+            outputs/junit-eval.xml
+            outputs/junit-judge.xml
             outputs/junit-redteam.xml
             alerts/
           if-no-files-found: ignore

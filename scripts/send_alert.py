@@ -4,8 +4,8 @@ Send an alert when the baseline/regression gate is blocked.
 Called by CI (`.github/workflows/agent-eval.yml`, step "Alert on blocked gate")
 only when `scripts/compare_baseline.py` fails. Delivers a Slack message when
 SLACK_WEBHOOK_URL is set; otherwise records a dry-run alert artifact. In either
-case, when running in GitHub Actions the alert is also written to the job
-summary ($GITHUB_STEP_SUMMARY) so it is visible with no external service.
+case, when running in GitHub Actions a neutral **Agent Eval** test-results
+summary is also written to the job summary ($GITHUB_STEP_SUMMARY).
 
 Design notes:
   - stdlib only (urllib), matching src/metrics/judge_metrics.py — no extra deps.
@@ -23,6 +23,7 @@ Usage:
 from __future__ import annotations
 
 import argparse
+import importlib.util
 import json
 import os
 import sys
@@ -32,6 +33,16 @@ from datetime import UTC, datetime
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
+
+
+def _load_build_pr_comment():
+    path = ROOT / "scripts" / "build_pr_comment.py"
+    spec = importlib.util.spec_from_file_location("build_pr_comment", path)
+    if spec is None or spec.loader is None:
+        raise ImportError(f"Cannot load {path}")
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
 
 
 def load_json(path: Path) -> dict | None:
@@ -99,7 +110,7 @@ def build_summary(run_id: str, comparison: dict | None, scorecard: dict | None) 
 def _langfuse_link(langfuse: dict | None) -> str | None:
     if not langfuse or not langfuse.get("tracing_enabled"):
         return None
-    return langfuse.get("traces_url") or langfuse.get("session_url")
+    return langfuse.get("traces_url")
 
 
 def _detail_lines(summary: dict, langfuse_url: str | None, *, bold: str) -> list[str]:
@@ -153,8 +164,13 @@ def render_markdown(summary: dict, langfuse_url: str | None) -> str:
     return "\n".join(lines)
 
 
+def render_github_job_summary() -> str:
+    """Neutral eval summary for the CI job summary (test results only)."""
+    return _load_build_pr_comment().render_test_results_markdown()
+
+
 def write_github_summary(markdown: str) -> bool:
-    """Append the alert to the CI job summary when running in GitHub Actions."""
+    """Append markdown to the CI job summary when running in GitHub Actions."""
     summary_path = os.getenv("GITHUB_STEP_SUMMARY")
     if not summary_path:
         return False
@@ -207,7 +223,8 @@ def main() -> None:
     summary = build_summary(args.run_id, comparison, scorecard)
     langfuse_url = _langfuse_link(langfuse)
     slack_text = render_text(summary, langfuse_url)
-    markdown = render_markdown(summary, langfuse_url)
+    alert_markdown = render_markdown(summary, langfuse_url)
+    job_summary_markdown = render_github_job_summary()
 
     webhook_url = (args.webhook_url or "").strip()
     if webhook_url:
@@ -218,19 +235,18 @@ def main() -> None:
         summary["alert_delivery"] = "dry-run"
         summary["delivery_detail"] = "SLACK_WEBHOOK_URL not set; alert recorded only"
 
-    # Always surface the alert in the CI job summary when running in Actions.
-    summary["github_summary"] = write_github_summary(markdown)
+    summary["github_summary"] = write_github_summary(job_summary_markdown)
 
     alerts_dir = Path(args.alerts_dir)
     alerts_dir.mkdir(parents=True, exist_ok=True)
     json_path = alerts_dir / f"{summary['alert_id']}.json"
     md_path = alerts_dir / f"{summary['alert_id']}.md"
     json_path.write_text(json.dumps(summary, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
-    md_path.write_text(markdown + "\n", encoding="utf-8")
+    md_path.write_text(alert_markdown + "\n", encoding="utf-8")
 
     print(f"Alert delivery: {summary['alert_delivery']} ({summary['delivery_detail']})")
     if summary["github_summary"]:
-        print("Alert written to GitHub job summary.")
+        print("Agent Eval test summary written to GitHub job summary.")
     print(f"Alert artifact: {json_path}")
 
     # Best-effort: never fail CI from the alert step.

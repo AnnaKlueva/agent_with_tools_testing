@@ -1,6 +1,4 @@
 {
-  "session_id": "eval-20260820T075942Z-cd78fa18",
-  "session_url": "https://cloud.langfuse.com/project/cmshkmrzl00c9ad0dtodkjk2p/sessions/eval-20260820T075942Z-cd78fa18",
   "traces_url": "https://cloud.langfuse.com/project/cmshkmrzl00c9ad0dtodkjk2p/traces?filter=traceTags%3BarrayOptions%3B%3Bany+of%3Beval",
   "tracing_enabled": true
 }
