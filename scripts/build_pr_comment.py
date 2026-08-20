@@ -49,12 +49,42 @@ from observability.langfuse_tracing import (  # noqa: E402
 from versioning import dataset_version_meta  # noqa: E402
 
 
+def _failure_node(failure: ET.Element | None, error: ET.Element | None) -> ET.Element | None:
+    """Pick failure/error node without truth-testing ElementTree elements."""
+    if failure is not None:
+        return failure
+    if error is not None:
+        return error
+    return None
+
+
+def _extract_assertion_line(text: str) -> str | None:
+    for line in text.splitlines():
+        stripped = line.strip()
+        if stripped.startswith("E ") and len(stripped) > 2:
+            return stripped[2:].strip()
+    return None
+
+
 def _failure_reason(node: ET.Element | None) -> str:
     if node is None:
         return "unknown failure"
     message = (node.attrib.get("message") or "").strip()
     text = (node.text or "").strip()
-    reason = message or text or "unknown failure"
+
+    if message:
+        reason = message.splitlines()[0].strip()
+        for prefix in ("AssertionError: ", "Failed: "):
+            if reason.startswith(prefix):
+                reason = reason[len(prefix) :].strip()
+    elif text:
+        reason = _extract_assertion_line(text) or text.splitlines()[0].strip()
+    else:
+        reason = "unknown failure"
+
+    if reason == "unknown failure" and text:
+        reason = _extract_assertion_line(text) or reason
+
     reason = re.sub(r"\s+", " ", reason)
     if len(reason) > 240:
         reason = reason[:237] + "..."
@@ -84,11 +114,12 @@ def _parse_junit(path: Path) -> dict | None:
         for case in suite.findall("testcase"):
             failure = case.find("failure")
             error = case.find("error")
-            if failure is not None or error is not None:
+            node = _failure_node(failure, error)
+            if node is not None:
                 failed_cases.append(
                     {
                         "name": case.attrib.get("name", "?"),
-                        "reason": _failure_reason(failure or error),
+                        "reason": _failure_reason(node),
                     }
                 )
 
@@ -130,16 +161,18 @@ def _parse_offline_fallback() -> dict[str, dict | None]:
             skipped = case.find("skipped") is not None
             if skipped:
                 bucket["skipped"] += 1
-            elif failure is not None or error is not None:
-                bucket["failed"] += 1
-                bucket["failed_cases"].append(
-                    {
-                        "name": case.attrib.get("name", "?"),
-                        "reason": _failure_reason(failure or error),
-                    }
-                )
             else:
-                bucket["passed"] += 1
+                node = _failure_node(failure, error)
+                if node is not None:
+                    bucket["failed"] += 1
+                    bucket["failed_cases"].append(
+                        {
+                            "name": case.attrib.get("name", "?"),
+                            "reason": _failure_reason(node),
+                        }
+                    )
+                else:
+                    bucket["passed"] += 1
 
     return {
         "test_functional": grouped["test_functional"] if grouped["test_functional"]["total"] else None,
