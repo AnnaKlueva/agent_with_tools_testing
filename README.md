@@ -20,6 +20,12 @@ End-to-end evaluation harness for a deterministic agentic system under test (SUT
 
 
 
+## Scope and non-goals
+
+This project is an **offline evaluation harness** for a single, deterministic tool agent. The following are explicit non-goals — deliberately out of scope, not gaps to be filled here (see also the out-of-scope list in [`test_strategy.md`](test_strategy.md) §2):
+
+- **Real-time testing, live monitoring, and replay** — non-goal. The harness is offline and batch by design ("generate once, evaluate offline") for reproducibility: the SUT runs once into `outputs/generations.json` and every check is offline over that file. Langfuse traces are emitted during that one-shot generation, not as a live monitoring or replay stream.
+- **Multi-agent orchestration and agent-to-agent (A2A) visualization** — out of scope. The SUT is a single rule-based orchestrator that routes each prompt to a `diagram` or `dashboard` path; there is no agent-to-agent messaging. Orchestration observability is the Langfuse nested span tree (`orchestrator-handle → route-intent → tool calls`), not a custom multi-agent interaction graph.
 
 ## Demo system
 
@@ -145,6 +151,8 @@ Every push to `main` creates a **baseline**, and every PR is compared against it
 
 - **push to** `main`: generation → pytest suite (`run_eval.sh`) → scorecard → `baselines/baseline.json` is committed back to `main` (`[skip ci]`).
 - **pull_request**: generation → scorecard → comparison with baseline → PR comment with a delta table → **CI fails** if any blocking metric drops by more than `EVAL_TOLERANCE` (default `0.02`), offline tests fail, or red-team ASR gate fails.
+
+**Alerting:** when the PR gate is blocked, the workflow runs `scripts/send_alert.py --run-id "pr-<n>"`. It posts a summary (blocking regressions, absolute-gate failures such as `security_asr`, and a Langfuse link when available) to Slack via the `SLACK_WEBHOOK_URL` secret; without the secret it records a `dry-run` alert instead. In both cases, when running in GitHub Actions the same alert is written to the **CI job summary** (`$GITHUB_STEP_SUMMARY`), so it is visible in the Actions run with no external service or secret. It also writes `alerts/alert-pr-<n>.json` (+ `.md`), uploaded as a CI artifact. Alerting is best-effort (`continue-on-error`) and never masks the underlying gate failure.
 
 **Local commands:**
 

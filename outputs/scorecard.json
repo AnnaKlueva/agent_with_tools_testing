@@ -1,13 +1,12 @@
 {
   "meta": {
-    "commit": "",
-    "branch": "",
-    "timestamp": "2026-08-18T15:09:02+00:00",
+    "commit": "e6f330d505eb4e1fb2b99b2b6444674514836b85",
+    "branch": "main",
+    "timestamp": "2026-08-20T08:00:03+00:00",
     "dataset_version": "1.0.0",
     "dataset_sha256": "c9391bd4a6d2aa05e2bb020074ead11986e3ea091deeec8e5cd82701153cca89",
     "generations_version": "1.0.0",
-    "generations_sha256": "571766c1a6c421c11f80156967a5b5f5104fe2185c545cecf080a08419f194ac",
-    "agent_version": "v1.1-rc",
+    "generations_sha256": "061b5b566a2b798279970baba1899c1412585877799f5bf60973ecabebbdffbb",
     "n_records": 32,
     "n_cases": 32,
     "judge_enabled": false,
@@ -769,131 +768,131 @@
       "per_case": {
         "AGENT-001": {
           "score": 1.0,
-          "reason": "Latency 0.24ms <= 100.0ms"
+          "reason": "Latency 67.16ms <= 100.0ms"
         },
         "AGENT-002": {
           "score": 1.0,
-          "reason": "Latency 0.23ms <= 100.0ms"
+          "reason": "Latency 1.60ms <= 100.0ms"
         },
         "AGENT-003": {
           "score": 1.0,
-          "reason": "Latency 0.22ms <= 100.0ms"
+          "reason": "Latency 1.49ms <= 100.0ms"
         },
         "AGENT-004": {
           "score": 1.0,
-          "reason": "Latency 0.22ms <= 100.0ms"
+          "reason": "Latency 1.50ms <= 100.0ms"
         },
         "AGENT-005": {
           "score": 1.0,
-          "reason": "Latency 0.22ms <= 100.0ms"
+          "reason": "Latency 1.77ms <= 100.0ms"
         },
         "AGENT-006": {
           "score": 1.0,
-          "reason": "Latency 0.21ms <= 100.0ms"
+          "reason": "Latency 1.55ms <= 100.0ms"
         },
         "AGENT-007": {
           "score": 1.0,
-          "reason": "Latency 0.20ms <= 100.0ms"
+          "reason": "Latency 1.82ms <= 100.0ms"
         },
         "AGENT-008": {
           "score": 1.0,
-          "reason": "Latency 0.20ms <= 100.0ms"
+          "reason": "Latency 1.69ms <= 100.0ms"
         },
         "AGENT-009": {
           "score": 1.0,
-          "reason": "Latency 0.21ms <= 100.0ms"
+          "reason": "Latency 1.57ms <= 100.0ms"
         },
         "AGENT-010": {
           "score": 1.0,
-          "reason": "Latency 0.21ms <= 100.0ms"
+          "reason": "Latency 1.80ms <= 100.0ms"
         },
         "AGENT-011": {
           "score": 1.0,
-          "reason": "Latency 0.31ms <= 100.0ms"
+          "reason": "Latency 1.60ms <= 100.0ms"
         },
         "AGENT-012": {
           "score": 1.0,
-          "reason": "Latency 0.32ms <= 100.0ms"
+          "reason": "Latency 1.44ms <= 100.0ms"
         },
         "AGENT-013": {
           "score": 1.0,
-          "reason": "Latency 0.25ms <= 100.0ms"
+          "reason": "Latency 1.71ms <= 100.0ms"
         },
         "AGENT-014": {
           "score": 1.0,
-          "reason": "Latency 0.22ms <= 100.0ms"
+          "reason": "Latency 1.94ms <= 100.0ms"
         },
         "AGENT-015": {
           "score": 1.0,
-          "reason": "Latency 0.21ms <= 100.0ms"
+          "reason": "Latency 1.57ms <= 100.0ms"
         },
         "AGENT-016": {
           "score": 1.0,
-          "reason": "Latency 0.21ms <= 100.0ms"
+          "reason": "Latency 1.49ms <= 100.0ms"
         },
         "AGENT-017": {
           "score": 1.0,
-          "reason": "Latency 0.21ms <= 100.0ms"
+          "reason": "Latency 1.46ms <= 100.0ms"
         },
         "AGENT-018": {
           "score": 1.0,
-          "reason": "Latency 0.21ms <= 100.0ms"
+          "reason": "Latency 1.68ms <= 100.0ms"
         },
         "AGENT-019": {
           "score": 1.0,
-          "reason": "Latency 0.20ms <= 100.0ms"
+          "reason": "Latency 1.59ms <= 100.0ms"
         },
         "AGENT-020": {
           "score": 1.0,
-          "reason": "Latency 0.20ms <= 100.0ms"
+          "reason": "Latency 1.86ms <= 100.0ms"
         },
         "AGENT-021": {
           "score": 1.0,
-          "reason": "Latency 0.21ms <= 100.0ms"
+          "reason": "Latency 1.36ms <= 100.0ms"
         },
         "AGENT-022": {
           "score": 1.0,
-          "reason": "Latency 0.20ms <= 100.0ms"
+          "reason": "Latency 1.22ms <= 100.0ms"
         },
         "AGENT-023": {
           "score": 1.0,
-          "reason": "Latency 0.21ms <= 100.0ms"
+          "reason": "Latency 1.16ms <= 100.0ms"
         },
         "AGENT-024": {
           "score": 1.0,
-          "reason": "Latency 0.20ms <= 100.0ms"
+          "reason": "Latency 1.14ms <= 100.0ms"
         },
         "AGENT-025": {
           "score": 1.0,
-          "reason": "Latency 0.21ms <= 100.0ms"
+          "reason": "Latency 1.18ms <= 100.0ms"
         },
         "AGENT-026": {
           "score": 1.0,
-          "reason": "Latency 0.21ms <= 100.0ms"
+          "reason": "Latency 1.24ms <= 100.0ms"
         },
         "AGENT-027": {
           "score": 1.0,
-          "reason": "Latency 0.20ms <= 100.0ms"
+          "reason": "Latency 1.64ms <= 100.0ms"
         },
         "AGENT-028": {
           "score": 1.0,
-          "reason": "Latency 0.21ms <= 100.0ms"
+          "reason": "Latency 1.55ms <= 100.0ms"
         },
         "AGENT-029": {
           "score": 1.0,
-          "reason": "Latency 0.20ms <= 100.0ms"
+          "reason": "Latency 1.45ms <= 100.0ms"
         },
         "AGENT-030": {
           "score": 1.0,
-          "reason": "Latency 0.20ms <= 100.0ms"
+          "reason": "Latency 1.73ms <= 100.0ms"
         },
         "AGENT-031": {
           "score": 1.0,
-          "reason": "Latency 0.22ms <= 100.0ms"
+          "reason": "Latency 1.49ms <= 100.0ms"
         },
         "AGENT-032": {
           "score": 1.0,
-          "reason": "Latency 0.20ms <= 100.0ms"
+          "reason": "Latency 1.44ms <= 100.0ms"
         }
       }
     },

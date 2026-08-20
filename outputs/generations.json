@@ -34,7 +34,7 @@
         }
       }
     ],
-    "latency_ms": 0.0597,
+    "latency_ms": 67.1564,
     "cost_usd": 0.0017,
     "run": 0
   },
@@ -73,7 +73,7 @@
         }
       }
     ],
-    "latency_ms": 0.0451,
+    "latency_ms": 1.6037,
     "cost_usd": 0.00174,
     "run": 0
   },
@@ -112,7 +112,7 @@
         }
       }
     ],
-    "latency_ms": 0.0396,
+    "latency_ms": 1.4893,
     "cost_usd": 0.00168,
     "run": 0
   },
@@ -152,7 +152,7 @@
         }
       }
     ],
-    "latency_ms": 0.0376,
+    "latency_ms": 1.4951,
     "cost_usd": 0.00148,
     "run": 0
   },
@@ -191,7 +191,7 @@
         }
       }
     ],
-    "latency_ms": 0.0375,
+    "latency_ms": 1.772,
     "cost_usd": 0.00143,
     "run": 0
   },
@@ -230,7 +230,7 @@
         }
       }
     ],
-    "latency_ms": 0.0347,
+    "latency_ms": 1.548,
     "cost_usd": 0.00151,
     "run": 0
   },
@@ -270,7 +270,7 @@
         }
       }
     ],
-    "latency_ms": 0.0333,
+    "latency_ms": 1.8232,
     "cost_usd": 0.00176,
     "run": 0
   },
@@ -310,7 +310,7 @@
         }
       }
     ],
-    "latency_ms": 0.0335,
+    "latency_ms": 1.687,
     "cost_usd": 0.00146,
     "run": 0
   },
@@ -349,7 +349,7 @@
         }
       }
     ],
-    "latency_ms": 0.0334,
+    "latency_ms": 1.5712,
     "cost_usd": 0.00172,
     "run": 0
   },
@@ -388,7 +388,7 @@
         }
       }
     ],
-    "latency_ms": 0.0333,
+    "latency_ms": 1.8014,
     "cost_usd": 0.00145,
     "run": 0
   },
@@ -427,7 +427,7 @@
         }
       }
     ],
-    "latency_ms": 0.0326,
+    "latency_ms": 1.6033,
     "cost_usd": 0.00174,
     "run": 0
   },
@@ -466,7 +466,7 @@
         }
       }
     ],
-    "latency_ms": 0.0331,
+    "latency_ms": 1.4418,
     "cost_usd": 0.00144,
     "run": 0
   },
@@ -505,7 +505,7 @@
         }
       }
     ],
-    "latency_ms": 0.0325,
+    "latency_ms": 1.707,
     "cost_usd": 0.0017,
     "run": 0
   },
@@ -555,7 +555,7 @@
         }
       }
     ],
-    "latency_ms": 0.0328,
+    "latency_ms": 1.943,
     "cost_usd": 0.00274,
     "run": 0
   },
@@ -594,7 +594,7 @@
         }
       }
     ],
-    "latency_ms": 0.0325,
+    "latency_ms": 1.5701,
     "cost_usd": 0.00178,
     "run": 0
   },
@@ -633,7 +633,7 @@
         }
       }
     ],
-    "latency_ms": 0.0323,
+    "latency_ms": 1.4905,
     "cost_usd": 0.00144,
     "run": 0
   },
@@ -672,7 +672,7 @@
         }
       }
     ],
-    "latency_ms": 0.0363,
+    "latency_ms": 1.4561,
     "cost_usd": 0.0016,
     "run": 0
   },
@@ -722,7 +722,7 @@
         }
       }
     ],
-    "latency_ms": 0.0342,
+    "latency_ms": 1.682,
     "cost_usd": 0.00274,
     "run": 0
   },
@@ -761,7 +761,7 @@
         }
       }
     ],
-    "latency_ms": 0.0338,
+    "latency_ms": 1.5927,
     "cost_usd": 0.00174,
     "run": 0
   },
@@ -800,7 +800,7 @@
         }
       }
     ],
-    "latency_ms": 0.0337,
+    "latency_ms": 1.8628,
     "cost_usd": 0.00146,
     "run": 0
   },
@@ -822,7 +822,7 @@
     "output": "Sorry, I cannot handle that request.",
     "selected_agent": "unknown",
     "tool_calls": [],
-    "latency_ms": 0.0343,
+    "latency_ms": 1.3624,
     "cost_usd": 0.00036,
     "run": 0
   },
@@ -844,7 +844,7 @@
     "output": "Sorry, I cannot handle that request.",
     "selected_agent": "unknown",
     "tool_calls": [],
-    "latency_ms": 0.0397,
+    "latency_ms": 1.2205,
     "cost_usd": 0.00036,
     "run": 0
   },
@@ -866,7 +866,7 @@
     "output": "Sorry, I cannot handle that request.",
     "selected_agent": "unknown",
     "tool_calls": [],
-    "latency_ms": 0.0341,
+    "latency_ms": 1.1568,
     "cost_usd": 0.00036,
     "run": 0
   },
@@ -888,7 +888,7 @@
     "output": "Sorry, I cannot handle that request.",
     "selected_agent": "unknown",
     "tool_calls": [],
-    "latency_ms": 0.0337,
+    "latency_ms": 1.1392,
     "cost_usd": 0.00036,
     "run": 0
   },
@@ -910,7 +910,7 @@
     "output": "Sorry, I cannot handle that request.",
     "selected_agent": "unknown",
     "tool_calls": [],
-    "latency_ms": 0.0336,
+    "latency_ms": 1.1843,
     "cost_usd": 0.00036,
     "run": 0
   },
@@ -932,7 +932,7 @@
     "output": "Sorry, I cannot handle that request.",
     "selected_agent": "unknown",
     "tool_calls": [],
-    "latency_ms": 0.0332,
+    "latency_ms": 1.2423,
     "cost_usd": 0.00036,
     "run": 0
   },
@@ -974,7 +974,7 @@
         }
       }
     ],
-    "latency_ms": 0.035,
+    "latency_ms": 1.6397,
     "cost_usd": 0.00206,
     "run": 0
   },
@@ -1015,7 +1015,7 @@
         }
       }
     ],
-    "latency_ms": 0.0351,
+    "latency_ms": 1.5461,
     "cost_usd": 0.00206,
     "run": 0
   },
@@ -1054,7 +1054,7 @@
         }
       }
     ],
-    "latency_ms": 0.0331,
+    "latency_ms": 1.4534,
     "cost_usd": 0.0017,
     "run": 0
   },
@@ -1104,7 +1104,7 @@
         }
       }
     ],
-    "latency_ms": 0.0346,
+    "latency_ms": 1.7339,
     "cost_usd": 0.00306,
     "run": 0
   },
@@ -1143,7 +1143,7 @@
         }
       }
     ],
-    "latency_ms": 0.0325,
+    "latency_ms": 1.4944,
     "cost_usd": 0.0017,
     "run": 0
   },
@@ -1182,7 +1182,7 @@
         }
       }
     ],
-    "latency_ms": 0.0322,
+    "latency_ms": 1.4417,
     "cost_usd": 0.00146,
     "run": 0
   }

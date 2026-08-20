@@ -1,7 +1,7 @@
 <!-- agent-eval-report -->
 ## 🤖 Agent Eval — baseline comparison
 
-**Gate: ❌ FAILED** (tolerance 0.02, baseline `dbb7c62` vs current `n/a`)
+**Gate: ❌ FAILED** (tolerance 0.02, baseline `dbb7c62` vs current `e6f330d`)
 
 | Metric | Baseline | Current | Δ | Status |
 |---|---:|---:|---:|:--|

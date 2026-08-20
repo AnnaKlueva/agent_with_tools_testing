@@ -165,6 +165,7 @@ jobs:
 
       - name: Alert on blocked gate
         if: github.event_name == 'pull_request' && steps.compare.outcome == 'failure'
+        continue-on-error: true
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
         run: python scripts/send_alert.py --run-id "pr-${{ github.event.number }}"

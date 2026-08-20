@@ -99,14 +99,13 @@
     "judge_model": "llama3.2:3b"
   },
   "current_meta": {
-    "commit": "",
-    "branch": "",
-    "timestamp": "2026-08-18T15:09:02+00:00",
+    "commit": "e6f330d505eb4e1fb2b99b2b6444674514836b85",
+    "branch": "main",
+    "timestamp": "2026-08-20T08:00:03+00:00",
     "dataset_version": "1.0.0",
     "dataset_sha256": "c9391bd4a6d2aa05e2bb020074ead11986e3ea091deeec8e5cd82701153cca89",
     "generations_version": "1.0.0",
-    "generations_sha256": "571766c1a6c421c11f80156967a5b5f5104fe2185c545cecf080a08419f194ac",
-    "agent_version": "v1.1-rc",
+    "generations_sha256": "061b5b566a2b798279970baba1899c1412585877799f5bf60973ecabebbdffbb",
     "n_records": 32,
     "n_cases": 32,
     "judge_enabled": false,
