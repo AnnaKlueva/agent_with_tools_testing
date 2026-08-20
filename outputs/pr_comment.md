@@ -31,10 +31,9 @@ _Metrics only in baseline (not compared): agent_quality, final_answer, tool_traj
 
 - **test_functional:** ⚪ NOT RUN
 - **test_eval:** ⚪ NOT RUN
-- **test_judge:** ⚪ NOT RUN
+- **test_judge (LLM as judge):** ⚪ NOT RUN
 - **test_redteam:** ⚪ NOT RUN
 _No pytest JUnit files found._
-
 
 _Scorecard: 32 cases, LLM judge skipped_
 

@@ -213,9 +213,14 @@ def _suite_status(stats: dict | None) -> tuple[str, str]:
     return "PASSED", "✅"
 
 
-def _test_summary_section() -> list[str]:
+def render_test_results_markdown(
+    *,
+    title: str = "### Agent Eval",
+    include_failure_note: bool = False,
+) -> str:
+    """Markdown test-suite summary from JUnit outputs (CI job summary, PR comment, etc.)."""
     rows = _collect_test_results()
-    lines = ["## 🧪 Test results", ""]
+    lines = [title, ""]
     any_results = False
     any_failures = False
 
@@ -244,7 +249,7 @@ def _test_summary_section() -> list[str]:
     if not any_results:
         lines.append("_No pytest JUnit files found._")
 
-    if any_failures:
+    if include_failure_note and any_failures:
         lines.extend(
             [
                 "",
@@ -253,7 +258,14 @@ def _test_summary_section() -> list[str]:
             ]
         )
     lines.append("")
-    return lines
+    return "\n".join(lines)
+
+
+def _test_summary_section() -> list[str]:
+    return render_test_results_markdown(
+        title="## 🧪 Test results",
+        include_failure_note=True,
+    ).splitlines()
 
 
 def _langfuse_section() -> list[str]:
