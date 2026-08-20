@@ -1,7 +1,6 @@
 pytest>=8.0
 deepeval>=1.0
 pandas>=2.0            
-matplotlib>=3.7        # for charts
 langfuse>=3.0          # optional: trace eval runs (requires LANGFUSE_* in .env)
 ollama>=0.4            # LLM-judge via local Ollama (deepeval OllamaModel)
 python-dotenv>=1.0     
