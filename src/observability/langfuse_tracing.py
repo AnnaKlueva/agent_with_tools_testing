@@ -1,5 +1,5 @@
 """
-Langfuse tracing for Track D agent eval runs.
+Langfuse tracing for agent eval runs.
 
 Wraps AgentSUT.handle() without modifying agent_sut.py. Tracing is optional:
 enabled when LANGFUSE_PUBLIC_KEY and LANGFUSE_SECRET_KEY are set.
@@ -7,6 +7,7 @@ enabled when LANGFUSE_PUBLIC_KEY and LANGFUSE_SECRET_KEY are set.
 
 from __future__ import annotations
 
+import json
 import os
 import re
 import subprocess
@@ -74,6 +75,69 @@ def _git_branch() -> str:
         return result.stdout.strip() or "unknown"
     except Exception:
         return "unknown"
+
+
+def _langfuse_base_url() -> str:
+    _ensure_env()
+    return (os.getenv("LANGFUSE_BASE_URL") or os.getenv("LANGFUSE_HOST") or "").rstrip("/")
+
+
+def _langfuse_project_id() -> str:
+    _ensure_env()
+    return (os.getenv("LANGFUSE_PROJECT_ID") or "").strip()
+
+
+def build_langfuse_session_url(session_id: str) -> str | None:
+    """Deep link to a Langfuse session (requires LANGFUSE_BASE_URL and LANGFUSE_PROJECT_ID)."""
+    base = _langfuse_base_url()
+    project_id = _langfuse_project_id()
+    if base and project_id and session_id:
+        return f"{base}/project/{project_id}/sessions/{session_id}"
+    return None
+
+
+def build_langfuse_traces_url(*, tag: str = "eval") -> str | None:
+    """Deep link to traces filtered by trace tag (defaults to eval runs)."""
+    base = _langfuse_base_url()
+    project_id = _langfuse_project_id()
+    if not base or not project_id:
+        return None
+    from urllib.parse import quote
+
+    # Langfuse UI filter syntax, e.g. traceTags;arrayOptions;;any of;edge
+    filter_value = f"traceTags;arrayOptions;;any of;{tag}"
+    encoded_filter = quote(filter_value, safe="").replace("%20", "+")
+    return f"{base}/project/{project_id}/traces?filter={encoded_filter}"
+
+
+def write_langfuse_run_links(
+    session_id: str,
+    out_dir: Path,
+    *,
+    include_judge: bool = False,
+) -> dict:
+    """Persist Langfuse UI links for CI job summaries and PR comments."""
+    path = out_dir / "langfuse.json"
+    existing: dict = {}
+    if path.exists():
+        try:
+            existing = json.loads(path.read_text(encoding="utf-8"))
+        except json.JSONDecodeError:
+            pass
+
+    links = {
+        **existing,
+        "session_id": session_id or existing.get("session_id"),
+        "session_url": build_langfuse_session_url(session_id or existing.get("session_id", "")),
+        "traces_url": build_langfuse_traces_url(tag="eval"),
+        "tracing_enabled": True,
+    }
+    if include_judge:
+        links["judge_traces_url"] = build_langfuse_traces_url(tag="llm-judge")
+
+    out_dir.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(links, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    return links
 
 
 def build_langfuse_eval_context() -> dict:
@@ -153,7 +217,6 @@ def trace_agent_case(case: dict, handle_fn: Callable[[str], dict]) -> dict:
             *(eval_ctx.get("tags") or []),
             case.get("category"),
             case.get("risk_id"),
-            "track-d",
         ]
     )
 
@@ -213,6 +276,123 @@ def trace_agent_case(case: dict, handle_fn: Callable[[str], dict]) -> dict:
         )
 
     return trace
+
+
+def trace_judge_record(
+    rec: dict,
+    judge_fn: Callable[[dict], dict[str, dict]],
+    *,
+    model: str,
+) -> dict[str, dict]:
+    """
+    Run LLM-judge metrics and emit Langfuse traces with per-metric scores.
+
+    Trace shape: llm-judge-case -> judge-{metric} (generation) + numeric scores.
+    When rec contains langfuse_trace_id, scores are also attached to that agent trace.
+    """
+    if not is_tracing_enabled():
+        return judge_fn(rec)
+
+    from langfuse import get_client, propagate_attributes
+
+    langfuse = get_client()
+    case_id = str(rec.get("id", "unknown"))
+    run = rec.get("run", 0)
+    session_id = rec.get("_langfuse_session_id")
+    eval_ctx = rec.get("_langfuse_eval_context") or build_langfuse_eval_context()
+
+    metadata = {
+        key: rec[key]
+        for key in ("category", "risk_id", "severity", "notes")
+        if key in rec
+    }
+    metadata["case_id"] = case_id
+    metadata["run"] = run
+    metadata["judge_model"] = model
+    if eval_ctx:
+        metadata["dataset_version"] = eval_ctx.get("dataset_version")
+        metadata["git_branch"] = eval_ctx.get("branch")
+
+    tags = _dedupe_tags(
+        [
+            *(eval_ctx.get("tags") or []),
+            "llm-judge",
+            rec.get("category"),
+            rec.get("risk_id"),
+        ]
+    )
+
+    judge_input = mask_secrets(
+        {
+            "case_id": case_id,
+            "input": rec.get("input"),
+            "output": rec.get("output"),
+            "selected_agent": rec.get("selected_agent"),
+            "tool_call_count": len(rec.get("tool_calls") or []),
+        }
+    )
+
+    with langfuse.start_as_current_observation(
+        as_type="span",
+        name="llm-judge-case",
+        input=judge_input,
+    ) as root_span:
+        with propagate_attributes(
+            session_id=session_id,
+            metadata=metadata,
+            tags=tags,
+            version=eval_ctx.get("dataset_version"),
+            trace_name=f"llm-judge-{case_id}",
+        ):
+            results = judge_fn(rec)
+
+            for metric_name, result in results.items():
+                with langfuse.start_as_current_observation(
+                    as_type="generation",
+                    name=f"judge-{metric_name}",
+                    model=model,
+                    input={"metric": metric_name, "case_id": case_id},
+                ) as metric_span:
+                    metric_span.update(
+                        output=mask_secrets(
+                            {
+                                "score": result["score"],
+                                "reason": result["reason"],
+                            }
+                        )
+                    )
+                    metric_span.score(
+                        name=metric_name,
+                        value=result["score"],
+                        data_type="NUMERIC",
+                        comment=result["reason"],
+                    )
+
+            if results:
+                avg_score = round(
+                    sum(item["score"] for item in results.values()) / len(results),
+                    4,
+                )
+                root_span.score_trace(
+                    name="judge_avg",
+                    value=avg_score,
+                    data_type="NUMERIC",
+                )
+
+            agent_trace_id = rec.get("langfuse_trace_id")
+            if agent_trace_id:
+                for metric_name, result in results.items():
+                    langfuse.create_score(
+                        name=metric_name,
+                        value=result["score"],
+                        trace_id=str(agent_trace_id),
+                        data_type="NUMERIC",
+                        comment=result["reason"],
+                    )
+
+        root_span.update(output=mask_secrets(results))
+
+    return results
 
 
 def flush_traces() -> None:

@@ -1,5 +1,5 @@
 """
-Acme Cloud Orchestrator Agent — System Under Test.
+Cloud Orchestrator Agent — System Under Test.
 
 """
 

@@ -16,7 +16,7 @@ DATASET = ROOT / "data" / "eval_dataset.jsonl"
 GENERATIONS = ROOT / "outputs" / "generations.json"
 REQUIRED_CATEGORIES = {"happy_path", "edge", "negative", "adversarial"}
 
-# MCP tool registry per release_notes_agent.md (Track D acceptance criteria).
+# MCP tool registry per release_notes_agent.md (acceptance criteria).
 TOOL_CATALOG = {
     "get_service_graph": {
         "agent": "diagram",
@@ -60,7 +60,7 @@ def test_dataset_schema():
         assert not missing, f"Case {case.get('id')} missing fields: {missing}"
 
 
-def test_track_d_expected_fields():
+def test_expected_fields():
     """Expectations for agent, tools, and security."""
     for case in load_cases():
         assert "expected_agent" in case, f"{case['id']}: missing expected_agent"
@@ -136,7 +136,7 @@ def _assert_tool_call(name: str, args: dict | None, label: str) -> None:
 
 
 def test_tools_available_and_described():
-    """Track D: MCP tools registered, schema-consistent, discoverable via AgentSUT."""
+    """MCP tools registered, schema-consistent, discoverable via AgentSUT."""
     for case in load_cases():
         for tool_name in case.get("expected_tools") or []:
             _assert_tool_registered(tool_name, f"{case['id']} expected_tools")

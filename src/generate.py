@@ -53,11 +53,12 @@ def main() -> None:
     langfuse_session_id = None
     langfuse_eval_context = None
     if is_tracing_enabled():
-        langfuse_session_id = "eval-%s-%s" % (
+        langfuse_session_id = os.getenv("EVAL_RUN_ID") or "eval-%s-%s" % (
             datetime.now(UTC).strftime("%Y%m%dT%H%M%SZ"),
             uuid.uuid4().hex[:8],
         )
         langfuse_eval_context = build_langfuse_eval_context()
+        print("Langfuse session:", langfuse_session_id)
     elif os.getenv("LANGFUSE_PUBLIC_KEY") or os.getenv("LANGFUSE_SECRET_KEY"):
         reason = tracing_disabled_reason()
         print(f"Warning: Langfuse tracing disabled ({reason}).")
@@ -104,6 +105,17 @@ def main() -> None:
         if is_tracing_enabled():
             flush_traces()
             print("Langfuse traces flushed.")
+            if langfuse_session_id:
+                from observability.langfuse_tracing import write_langfuse_run_links
+
+                links = write_langfuse_run_links(langfuse_session_id, out_dir)
+                if links.get("session_url"):
+                    print("Langfuse session URL:", links["session_url"])
+                elif links.get("session_id"):
+                    print(
+                        "Set LANGFUSE_PROJECT_ID for direct Langfuse links "
+                        f"(session id: {links['session_id']})"
+                    )
     except ImportError:
         pass
 

@@ -1,10 +1,10 @@
 {
   "run_id": "run-20260818T150900Z-4fe334",
-  "agent_id": "acme-cloud-orchestrator",
-  "agent_name": "Acme Cloud Orchestrator Agent",
+  "agent_id": "cloud-orchestrator",
+  "agent_name": "Cloud Orchestrator Agent",
   "agent_version": "v1.0-safe",
   "sut_variant": "v1.0-safe",
-  "endpoint": "https://api.acme.internal/agents/cloud-orchestrator/v1.0",
+  "endpoint": "https://api.internal/agents/cloud-orchestrator/v1.0",
   "started_at": "2026-08-18T15:09:00+00:00",
   "status": "scored",
   "judge_requested": false,

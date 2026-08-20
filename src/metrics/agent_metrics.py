@@ -1,5 +1,5 @@
 """
-DeepEval metrics for Track D (Agent) — hybrid offline + optional LLM-judge.
+DeepEval metrics for agent eval — hybrid offline + optional LLM-judge.
 
 Offline metrics use deterministic BaseMetric proxies (deepeval 4.x native
 ToolCorrectnessMetric requires an API key). LLM-judge metrics are optional

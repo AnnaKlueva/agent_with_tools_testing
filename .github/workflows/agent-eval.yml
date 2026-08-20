@@ -13,7 +13,6 @@ on:
       - "outputs/**"
       - "requirements.txt"
       - "run_eval.sh"
-      - "run_eval.ps1"
       - ".github/workflows/agent-eval.yml"
   pull_request:
     paths:
@@ -26,7 +25,6 @@ on:
       - "outputs/**"
       - "requirements.txt"
       - "run_eval.sh"
-      - "run_eval.ps1"
       - ".github/workflows/agent-eval.yml"
 
 permissions:
@@ -90,10 +88,45 @@ jobs:
 
       - name: Generate agent outputs
         env:
+          EVAL_RUN_ID: ci-${{ github.event_name }}-${{ github.run_id }}
           LANGFUSE_PUBLIC_KEY: ${{ secrets.LANGFUSE_PUBLIC_KEY }}
           LANGFUSE_SECRET_KEY: ${{ secrets.LANGFUSE_SECRET_KEY }}
           LANGFUSE_BASE_URL: ${{ secrets.LANGFUSE_BASE_URL }}
+          LANGFUSE_PROJECT_ID: ${{ secrets.LANGFUSE_PROJECT_ID }}
         run: python src/generate.py
+
+      - name: Add Langfuse links to job summary
+        if: always()
+        run: |
+          echo "### Langfuse" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          if [ ! -f outputs/langfuse.json ]; then
+            echo "Tracing disabled or Langfuse keys are not configured." >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          python <<'PY'
+          import json
+          import os
+          from pathlib import Path
+
+          data = json.loads(Path("outputs/langfuse.json").read_text(encoding="utf-8"))
+          lines: list[str] = []
+          if not data.get("tracing_enabled"):
+              lines.append("Tracing was not enabled for this run.")
+          else:
+              session_id = data.get("session_id") or ""
+              if data.get("session_url"):
+                  lines.append(f"- [Session `{session_id}`]({data['session_url']})")
+              elif session_id:
+                  lines.append(
+                      f"- Session `{session_id}` "
+                      "(set `LANGFUSE_PROJECT_ID` secret for a direct link)"
+                  )
+              if data.get("traces_url"):
+                  lines.append(f"- [All eval traces]({data['traces_url']})")
+          with Path(os.environ["GITHUB_STEP_SUMMARY"]).open("a", encoding="utf-8") as summary:
+              summary.write("\n".join(lines) + "\n")
+          PY
 
       - name: Run offline tests (PR)
         if: github.event_name == 'pull_request'
@@ -138,6 +171,9 @@ jobs:
 
       - name: Build PR comment
         if: github.event_name == 'pull_request' && always()
+        env:
+          LANGFUSE_BASE_URL: ${{ secrets.LANGFUSE_BASE_URL }}
+          LANGFUSE_PROJECT_ID: ${{ secrets.LANGFUSE_PROJECT_ID }}
         run: python scripts/build_pr_comment.py
 
       - name: Post PR comment
@@ -217,6 +253,7 @@ jobs:
           name: agent-eval-${{ github.event_name }}-${{ github.run_id }}
           path: |
             outputs/scorecard.json
+            outputs/langfuse.json
             outputs/comparison.md
             outputs/comparison.json
             outputs/pr_comment.md
