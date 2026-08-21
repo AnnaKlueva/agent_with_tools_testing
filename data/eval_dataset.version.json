@@ -1,8 +1,8 @@
 {
   "artifact": "eval_dataset",
   "path": "data/eval_dataset.jsonl",
-  "version": "1.0.0",
-  "sha256": "c9391bd4a6d2aa05e2bb020074ead11986e3ea091deeec8e5cd82701153cca89",
+  "version": "1.0.1",
+  "sha256": "334d38c2721e84442dd53873f1871fa6051a2e98a3a04dedf0b35d8044fbc0e8",
   "n_cases": 32,
-  "updated_at": "2026-08-17T00:00:00+00:00"
+  "updated_at": "2026-08-21T00:00:00+00:00"
 }
