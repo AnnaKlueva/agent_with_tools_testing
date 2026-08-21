@@ -133,15 +133,6 @@ Then run `python src/generate.py` and open your Langfuse project:
 - **Sessions** — filter by tag `eval` or session id from the generate log
 - **Traces** — filter by tag `dataset-1.0.0` or trace name `agent-eval-AGENT-027`
 
-Recorded eval sessions (from local run metadata in `runs/`):
-
-
-| Run        | Session ID                                                                 | Gate                          |
-| ---------- | -------------------------------------------------------------------------- | ----------------------------- |
-| Baseline   | `[run-20260818T150900Z-4fe334](runs/run-20260818T150900Z-4fe334/run.json)` | —                             |
-| Comparison | `[run-20260818T150901Z-efbf7b](runs/run-20260818T150901Z-efbf7b/run.json)` | failed (`security_asr = 0.5`) |
-
-
 The pipeline works without Langfuse keys; committed `outputs/generations.json` has `langfuse_trace_url: null` when tracing was off during generation.
 
 ## CI/CD: baseline and regression gate

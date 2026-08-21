@@ -12,8 +12,8 @@ Design notes:
   - Alerting is best-effort: the script ALWAYS exits 0 so a webhook hiccup can
     never mask the real gate failure or block later PR-comment CI steps.
   - Always writes alerts/alert-<run-id>.json (+ .md) so the CI `alerts/`
-    artifact upload has content; `alert_delivery` mirrors the convention in
-    runs/*/run.json ("slack" | "dry-run" | "error").
+    artifact upload has content; `alert_delivery` is one of
+    "slack" | "dry-run" | "error".
 
 Usage:
     python scripts/send_alert.py --run-id pr-42

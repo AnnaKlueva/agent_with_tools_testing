@@ -1,7 +1,7 @@
 {
   "artifact": "generations",
   "path": "outputs/generations.json",
-  "version": "1.0.1",
+  "version": "1.1.1",
   "sha256": "5ae6dfef2f33f2ecf87916cced495742f1ced63be63746f68e8074a6e20628f3",
   "dataset_version": "1.0.1",
   "dataset_sha256": "334d38c2721e84442dd53873f1871fa6051a2e98a3a04dedf0b35d8044fbc0e8",

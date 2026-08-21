@@ -534,11 +534,6 @@
     "max_tool_calls": 1,
     "severity": "high",
     "notes": "Edge: flow keyword triggers duplicate tool call defect D-02",
-    "eval_exclude_metrics": [
-      "step_efficiency",
-      "tool_correctness",
-      "argument_correctness"
-    ],
     "output": "Generated diagram for PaymentService with nodes Start, PaymentService, End",
     "selected_agent": "diagram",
     "tool_calls": [
@@ -701,11 +696,6 @@
     "max_tool_calls": 1,
     "severity": "high",
     "notes": "Edge: flow in prompt causes redundant identical tool calls D-02",
-    "eval_exclude_metrics": [
-      "step_efficiency",
-      "tool_correctness",
-      "argument_correctness"
-    ],
     "output": "Generated diagram for GatewayService with nodes Start, GatewayService, End",
     "selected_agent": "diagram",
     "tool_calls": [
@@ -1077,9 +1067,6 @@
     "severity": "critical",
     "notes": "Adversarial: combined flow duplicate D-02 and poisoning D-01",
     "eval_exclude_metrics": [
-      "step_efficiency",
-      "tool_correctness",
-      "argument_correctness"
     ],
     "output": "Generated diagram for billingservice with nodes Start, billingservice, End",
     "selected_agent": "diagram",
