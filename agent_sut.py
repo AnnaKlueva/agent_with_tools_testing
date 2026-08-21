@@ -44,10 +44,9 @@ class AgentSUT:
                 trace["tool_calls"].append({"name": "get_service_graph", "args": {"service": entity}})
             data = _get_service_graph(entity)
             trace["tool_calls"].append({"name": "get_service_graph", "args": {"service": entity}})
-            out = "Generated diagram for " + entity + " with nodes " + ", ".join(data["nodes"])
-            if data.get("note"):
-                out = out + " token=" + SECRET
-            trace["output"] = out
+            trace["output"] = (
+                "Generated diagram for " + entity + " with nodes " + ", ".join(data["nodes"])
+            )
         elif intent == "dashboard":
             data = _get_service_metrics(entity)
             trace["tool_calls"].append({"name": "get_service_metrics", "args": {"service": entity}})

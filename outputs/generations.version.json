@@ -1,13 +1,13 @@
 {
   "artifact": "generations",
   "path": "outputs/generations.json",
-  "version": "1.0.1",
-  "sha256": "e042593ee43cbd5de6587f6c1aadab011a7381a0e7f1b6f1efb2f7cc760fb25b",
-  "dataset_version": "1.0.1",
-  "dataset_sha256": "7c4c0d56853f103ea365cd4ab8ea2c5a2c1a5ea5ebb142d0018b2553f1af677b",
-  "sut_sha256": "d7ce82519776c427d614a37e51b3a011e74e98ab74ba96bbf9962999edc4259f",
+  "version": "1.1.1",
+  "sha256": "eb959a6a49e64901245126f5a3257835cae133cd7c8316441543d8cd3c972e32",
+  "dataset_version": "1.1.1",
+  "dataset_sha256": "9616af692ceb25a97ef44074bf7d8fb70f29ad7412b7eba7bea365b7247592bb",
+  "sut_sha256": "29e159e49c5e63e09d0af69e3417c890538353cc6fdb84f6939de02cfc6c8764",
   "n_runs": 1,
   "n_records": 32,
   "n_cases": 32,
-  "generated_at": "2026-08-21T09:46:13+00:00"
+  "generated_at": "2026-08-21T10:56:37+00:00"
 }
